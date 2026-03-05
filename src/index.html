@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini Slot</title>
+    <link rel="stylesheet" href="./styles/main.css" />
+  </head>
+  <body>
+    <main class="slot-app">
+      <header class="panel">
+        <h1>Mini Slot</h1>
+        <p class="sub">3-Reel Classic</p>
+      </header>
+
+      <section class="status panel">
+        <div>
+          <span class="label">Credit</span>
+          <strong id="credit">100</strong>
+        </div>
+        <div>
+          <span class="label">Bet</span>
+          <strong id="bet">1</strong>
+        </div>
+        <div>
+          <span class="label">Last Win</span>
+          <strong id="lastWin">0</strong>
+        </div>
+      </section>
+
+      <section class="reels panel" aria-label="slot reels">
+        <div class="reel" id="reel-0">🍒</div>
+        <div class="reel" id="reel-1">🍋</div>
+        <div class="reel" id="reel-2">🔔</div>
+      </section>
+
+      <section class="controls panel">
+        <button id="betDown" type="button">BET -</button>
+        <button id="betUp" type="button">BET +</button>
+        <button id="spin" type="button" class="spin">SPIN</button>
+        <button id="reset" type="button">RESET</button>
+      </section>
+
+      <section class="message panel" id="message" aria-live="polite">
+        Ready.
+      </section>
+
+      <section class="paytable panel">
+        <h2>Pay Table</h2>
+        <ul id="payTable"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="./scripts/ui.js"></script>
+  </body>
+</html>
