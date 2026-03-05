@@ -192,7 +192,7 @@ h2 {
 
 .controls {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
 }
 
@@ -451,7 +451,7 @@ body.win-mode .slot-app {
   }
 
   .controls {
-    grid-template-columns: 0.85fr 0.85fr 1.4fr 0.85fr;
+    grid-template-columns: 0.8fr 0.8fr 1.25fr 0.8fr 1fr;
   }
 
   button {
@@ -506,6 +506,6 @@ body.win-mode .slot-app {
   }
 
   .controls {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
