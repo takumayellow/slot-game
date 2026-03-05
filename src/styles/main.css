@@ -1,12 +1,14 @@
 :root {
-  --bg-1: #08111f;
-  --bg-2: #14345d;
-  --card: rgba(11, 22, 41, 0.78);
+  --bg-1: #040b16;
+  --bg-2: #0c2f4d;
+  --card: rgba(8, 18, 34, 0.82);
   --line: rgba(255, 255, 255, 0.18);
-  --text: #f6f7fb;
-  --accent: #f5b700;
-  --accent-2: #ff7d00;
+  --text: #f8fafc;
+  --muted: #b8c7da;
+  --accent: #ffd166;
+  --accent-2: #ef7d00;
   --good: #72e06a;
+  --warn: #ffd1a8;
 }
 
 * {
@@ -20,23 +22,31 @@ body {
   place-items: center;
   font-family: "Segoe UI", "Yu Gothic UI", sans-serif;
   color: var(--text);
-  background: radial-gradient(circle at 20% 10%, #2b5f9e, transparent 35%),
-    radial-gradient(circle at 85% 90%, #9d3807, transparent 40%),
-    linear-gradient(150deg, var(--bg-1), var(--bg-2));
+  background: radial-gradient(circle at 12% 15%, #1b4f81, transparent 32%),
+    radial-gradient(circle at 90% 85%, #8a3a0a, transparent 40%),
+    linear-gradient(155deg, var(--bg-1), var(--bg-2));
 }
 
 .slot-app {
-  width: min(760px, 94vw);
+  width: min(980px, 96vw);
   display: grid;
-  gap: 14px;
+  gap: 12px;
+  padding: 8px 0;
 }
 
 .panel {
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--card);
-  padding: 14px;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(7px);
+}
+
+.topbar {
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
 h1,
@@ -45,56 +55,108 @@ p {
   margin: 0;
 }
 
+h1 {
+  font-size: clamp(1.1rem, 2.1vw, 1.45rem);
+}
+
+h2 {
+  font-size: 0.9rem;
+}
+
 .sub {
-  opacity: 0.75;
-  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 3px;
+}
+
+.character {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 48%;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+#charaLine {
+  font-size: 0.79rem;
+  color: var(--warn);
+  line-height: 1.35;
+}
+
+.play-area {
+  display: grid;
+  grid-template-columns: 1fr 210px;
+  gap: 12px;
+}
+
+.machine {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
 }
 
 .status {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
-.status .label {
+.status > div {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.label {
   display: block;
-  opacity: 0.75;
-  font-size: 0.84rem;
+  color: var(--muted);
+  font-size: 0.72rem;
 }
 
 .status strong {
-  font-size: 1.3rem;
+  font-size: clamp(1.05rem, 2.8vw, 1.4rem);
 }
 
 .reels {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 .reel {
+  min-height: 112px;
+  border-radius: 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  min-height: 100px;
   display: grid;
   place-items: center;
-  font-size: clamp(2rem, 7vw, 3.4rem);
-  background: rgba(0, 0, 0, 0.2);
+  font-size: clamp(2.15rem, 8vw, 3.3rem);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.14));
 }
 
 .controls {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 button {
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 11px;
-  font-weight: 700;
+  padding: 10px;
   color: var(--text);
   background: rgba(255, 255, 255, 0.08);
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -109,42 +171,163 @@ button:disabled {
 
 button.spin {
   border-color: transparent;
-  background: linear-gradient(100deg, var(--accent), var(--accent-2));
-  color: #1d1202;
+  background: linear-gradient(102deg, var(--accent), var(--accent-2));
+  color: #2a1800;
 }
 
 .message {
-  font-weight: 600;
-  min-height: 52px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  min-height: 44px;
+  padding: 10px;
+  font-size: 0.92rem;
   display: grid;
   align-items: center;
+  background: rgba(0, 0, 0, 0.16);
 }
 
 .message.win {
   color: var(--good);
 }
 
-.paytable ul {
+.guide {
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+#payTable {
   list-style: none;
-  margin: 10px 0 0;
+  margin: 0;
   padding: 0;
   display: grid;
   gap: 6px;
 }
 
-.paytable li {
+#payTable li {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 5px 9px;
+  font-size: 0.76rem;
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px dashed var(--line);
-  padding-bottom: 4px;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
 }
 
-@media (max-width: 640px) {
-  .controls {
-    grid-template-columns: repeat(2, 1fr);
+.hint {
+  color: var(--muted);
+  font-size: 0.73rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 900px) {
+  .play-area {
+    grid-template-columns: 1fr;
   }
 
-  .status {
-    grid-template-columns: 1fr;
+  .guide {
+    padding: 9px;
+  }
+
+  #payTable {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  #payTable li {
+    width: auto;
+  }
+}
+
+@media (max-width: 932px) and (orientation: landscape) {
+  body {
+    min-height: 100dvh;
+  }
+
+  .slot-app {
+    width: min(960px, 98vw);
+    gap: 8px;
+  }
+
+  .topbar {
+    padding: 8px 10px;
+  }
+
+  .sub {
+    font-size: 0.75rem;
+  }
+
+  .character {
+    max-width: 54%;
+  }
+
+  #charaLine {
+    font-size: 0.72rem;
+  }
+
+  .play-area {
+    grid-template-columns: 1fr 190px;
+    gap: 8px;
+  }
+
+  .machine {
+    gap: 7px;
+    padding: 8px;
+  }
+
+  .status > div {
+    padding: 6px 8px;
+  }
+
+  .reel {
+    min-height: 76px;
+    font-size: clamp(1.8rem, 5vw, 2.4rem);
+  }
+
+  .controls {
+    grid-template-columns: 0.85fr 0.85fr 1.4fr 0.85fr;
+  }
+
+  button {
+    padding: 8px;
+    font-size: 0.84rem;
+  }
+
+  .message {
+    min-height: 36px;
+    padding: 7px 9px;
+    font-size: 0.82rem;
+  }
+
+  .guide {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  #payTable li {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+
+  .hint {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 560px) and (orientation: portrait) {
+  .topbar {
+    display: grid;
+    gap: 7px;
+  }
+
+  .character {
+    max-width: 100%;
+  }
+
+  .controls {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

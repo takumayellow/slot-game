@@ -8,46 +8,55 @@
   </head>
   <body>
     <main class="slot-app">
-      <header class="panel">
-        <h1>Mini Slot</h1>
-        <p class="sub">3-Reel Classic</p>
+      <header class="topbar panel">
+        <div>
+          <h1>Neon Neko Slot</h1>
+          <p class="sub">Tokyo Alley Theme</p>
+        </div>
+        <div class="character">
+          <div class="avatar" aria-hidden="true">🐈</div>
+          <p id="charaLine">ミケ「横向きで回すと遊びやすいよ．」</p>
+        </div>
       </header>
 
-      <section class="status panel">
-        <div>
-          <span class="label">Credit</span>
-          <strong id="credit">100</strong>
-        </div>
-        <div>
-          <span class="label">Bet</span>
-          <strong id="bet">1</strong>
-        </div>
-        <div>
-          <span class="label">Last Win</span>
-          <strong id="lastWin">0</strong>
-        </div>
-      </section>
+      <section class="play-area">
+        <section class="machine panel">
+          <section class="status" aria-label="status">
+            <div>
+              <span class="label">Credit</span>
+              <strong id="credit">100</strong>
+            </div>
+            <div>
+              <span class="label">Bet</span>
+              <strong id="bet">1</strong>
+            </div>
+            <div>
+              <span class="label">Last Win</span>
+              <strong id="lastWin">0</strong>
+            </div>
+          </section>
 
-      <section class="reels panel" aria-label="slot reels">
-        <div class="reel" id="reel-0">🍒</div>
-        <div class="reel" id="reel-1">🍋</div>
-        <div class="reel" id="reel-2">🔔</div>
-      </section>
+          <section class="reels" aria-label="slot reels">
+            <div class="reel" id="reel-0">🍒</div>
+            <div class="reel" id="reel-1">🍋</div>
+            <div class="reel" id="reel-2">🔔</div>
+          </section>
 
-      <section class="controls panel">
-        <button id="betDown" type="button">BET -</button>
-        <button id="betUp" type="button">BET +</button>
-        <button id="spin" type="button" class="spin">SPIN</button>
-        <button id="reset" type="button">RESET</button>
-      </section>
+          <section class="controls">
+            <button id="betDown" type="button">BET -</button>
+            <button id="betUp" type="button">BET +</button>
+            <button id="spin" type="button" class="spin">SPIN</button>
+            <button id="reset" type="button">RESET</button>
+          </section>
 
-      <section class="message panel" id="message" aria-live="polite">
-        Ready.
-      </section>
+          <section class="message" id="message" aria-live="polite">Ready.</section>
+        </section>
 
-      <section class="paytable panel">
-        <h2>Pay Table</h2>
-        <ul id="payTable"></ul>
+        <aside class="guide panel">
+          <h2>Mini Pay</h2>
+          <ul id="payTable"></ul>
+          <p class="hint">7 と BAR が高配当．🍒2個でも小当たり．</p>
+        </aside>
       </section>
     </main>
 
