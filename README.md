@@ -26,7 +26,8 @@ python -m http.server 8080
 ## VOICEVOX連携
 
 - 春日部つむぎ音声は VOICEVOX API で再生します．
-- GitHub Pages (HTTPS) では `http://localhost:50021` を直接呼べないため，`voiceApi` の指定が必要です．
+- GitHub Pages (HTTPS) では既定で `tts.quest` の VOICEVOX API を使用します．
+- ローカルの VOICEVOX ENGINE を使いたい場合は `voiceApi` か `voiceHost` を指定します．
 
 例:
 
@@ -34,7 +35,7 @@ python -m http.server 8080
 https://<user>.github.io/slot-game/?voiceApi=https://<your-voicevox-proxy>
 ```
 
-- 正しい春日部つむぎ音声を強制するため，デフォルトではブラウザ音声フォールバックを無効化しています．
+- 正しい春日部つむぎ音声を優先するため，デフォルトではブラウザ音声フォールバックを無効化しています．
 - 検証用にフォールバックを使いたい場合のみ `fallbackSpeech=1` を追加します．
 
 ## 推奨画面

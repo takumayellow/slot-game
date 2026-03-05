@@ -34,6 +34,9 @@ const pageHost = window.location.hostname || "127.0.0.1";
 const defaultVoiceHost = pageHost === "localhost" ? "127.0.0.1" : pageHost;
 let voiceHost = query.get("voiceHost") || defaultVoiceHost;
 let VOICEVOX_URL = explicitVoiceApi || `http://${voiceHost}:50021`;
+const TTS_QUEST_API = "https://api.tts.quest/v3/voicevox/synthesis";
+const TSUMUGI_SPEAKER_ID = 8;
+let voiceMode = "engine";
 let audioCtx = null;
 let fallbackVoice = null;
 
@@ -153,12 +156,10 @@ function playJackpotSound() {
 
 async function initVoicevoxTsumugi() {
   if (window.location.protocol === "https:" && !explicitVoiceApi) {
-    if (allowFallbackSpeech) {
-      initWebSpeechFallback();
-    } else {
-      setVoiceState("VOICEVOX未接続（?voiceApi=https://... を指定）");
-    }
-    return false;
+    voiceMode = "ttsquest";
+    speakerId = TSUMUGI_SPEAKER_ID;
+    setVoiceState("VOICEVOX Web API (春日部つむぎ)");
+    return true;
   }
 
   const hosts = [...new Set([voiceHost, defaultVoiceHost, "127.0.0.1", "localhost"])];
@@ -183,6 +184,7 @@ async function initVoicevoxTsumugi() {
         speakerId = (normal ?? tsumugi.styles[0]).id;
         voiceHost = host;
         VOICEVOX_URL = url;
+        voiceMode = "engine";
         setVoiceState(`VOICEVOX 春日部つむぎ (${voiceHost}:50021, style ${speakerId})`);
         return true;
       } catch (e) {
@@ -198,6 +200,41 @@ async function initVoicevoxTsumugi() {
   }
 }
 
+async function playAudioFromUrl(url) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  const audio = new Audio(url);
+  currentAudio = audio;
+  if (url.startsWith("blob:")) {
+    audio.addEventListener("ended", () => {
+      URL.revokeObjectURL(url);
+    });
+  }
+  await audio.play();
+}
+
+async function speakWithTtsQuest(text) {
+  const url = `${TTS_QUEST_API}?text=${encodeURIComponent(text)}&speaker=${TSUMUGI_SPEAKER_ID}`;
+  const response = await fetch(url, { method: "GET" });
+  if (!response.ok) {
+    throw new Error(`tts.quest ${response.status}`);
+  }
+  const data = await response.json();
+  if (!data.success) {
+    const retry = typeof data.retryAfter === "number" ? `retryAfter=${data.retryAfter}` : "unknown";
+    throw new Error(`tts.quest failed (${retry})`);
+  }
+
+  const streamUrl = data.mp3StreamingUrl || data.mp3DownloadUrl;
+  if (!streamUrl) {
+    throw new Error("audio url not found");
+  }
+  await playAudioFromUrl(streamUrl);
+  setVoiceState("VOICEVOX Web API (春日部つむぎ)");
+}
+
 async function speak(text) {
   if (!speakerId) {
     const connected = await initVoicevoxTsumugi();
@@ -210,6 +247,11 @@ async function speak(text) {
   }
 
   try {
+    if (voiceMode === "ttsquest") {
+      await speakWithTtsQuest(text);
+      return;
+    }
+
     const queryResponse = await fetch(
       `${VOICEVOX_URL}/audio_query?text=${encodeURIComponent(text)}&speaker=${speakerId}`,
       { method: "POST" },
@@ -236,19 +278,7 @@ async function speak(text) {
 
     const blob = await synthResponse.blob();
     const url = URL.createObjectURL(blob);
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio = null;
-    }
-    const audio = new Audio(url);
-    currentAudio = audio;
-    audio.addEventListener("ended", () => {
-      URL.revokeObjectURL(url);
-      if (currentAudio === audio) {
-        currentAudio = null;
-      }
-    });
-    await audio.play();
+    await playAudioFromUrl(url);
     setVoiceState(`VOICEVOX 春日部つむぎ (style ${speakerId})`);
   } catch (error) {
     const reason = error instanceof Error ? error.message : "unknown";
