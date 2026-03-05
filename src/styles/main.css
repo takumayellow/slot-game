@@ -35,10 +35,10 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: url("../assets/mike-bg.svg") no-repeat center center,
-    url("../assets/mike-bg.svg") no-repeat 12% 75%;
-  background-size: min(1080px, 96vw), min(430px, 44vw);
-  opacity: 0.34;
+  background: url("../assets/openmoji-cat-a.svg") no-repeat 68% 52%,
+    url("../assets/openmoji-cat-b.svg") no-repeat 14% 82%;
+  background-size: min(780px, 90vw), min(340px, 40vw);
+  opacity: 0.46;
   transform: rotate(-2deg);
   pointer-events: none;
   z-index: 0;
@@ -69,7 +69,7 @@ body::after {
 .panel {
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: var(--card);
+  background: rgba(7, 14, 30, 0.82);
   backdrop-filter: blur(7px);
 }
 
@@ -117,6 +117,13 @@ h2 {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid var(--line);
   flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 #charaLine {
@@ -375,8 +382,19 @@ body.win-mode .slot-app {
   }
 
   body::before {
-    background-size: min(840px, 98vw), min(300px, 38vw);
-    opacity: 0.29;
+    background: url("../assets/openmoji-cat-a.svg") no-repeat 62% 50%,
+      url("../assets/openmoji-cat-b.svg") no-repeat -2% 80%;
+    background-size: min(700px, 98vw), min(250px, 42vw);
+    opacity: 0.55;
+    transform: rotate(-1deg);
+  }
+
+  body::after {
+    opacity: 0.55;
+  }
+
+  .panel {
+    background: rgba(6, 12, 28, 0.74);
   }
 
   .slot-app {
@@ -450,6 +468,22 @@ body.win-mode .slot-app {
 }
 
 @media (max-width: 560px) and (orientation: portrait) {
+  body::before {
+    background: url("../assets/openmoji-cat-a.svg") no-repeat 52% 52%,
+      url("../assets/openmoji-cat-b.svg") no-repeat -26% 88%;
+    background-size: min(540px, 125vw), min(260px, 70vw);
+    opacity: 0.5;
+    transform: none;
+  }
+
+  body::after {
+    opacity: 0.48;
+  }
+
+  .panel {
+    background: rgba(6, 12, 28, 0.7);
+  }
+
   .topbar {
     display: grid;
     gap: 7px;
