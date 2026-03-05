@@ -27,7 +27,12 @@ const voiceTestBtn = document.getElementById("voiceTest");
 let spinning = false;
 let speakerId = null;
 let currentAudio = null;
-const VOICEVOX_URL = "http://127.0.0.1:50021";
+const query = new URLSearchParams(window.location.search);
+const pageHost = window.location.hostname || "127.0.0.1";
+const defaultVoiceHost = pageHost === "localhost" ? "127.0.0.1" : pageHost;
+let voiceHost = query.get("voiceHost") || defaultVoiceHost;
+let VOICEVOX_URL = `http://${voiceHost}:50021`;
+let audioCtx = null;
 
 function randomIcon() {
   return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)].icon;
@@ -57,26 +62,92 @@ function setVoiceState(text) {
   voiceStateEl.textContent = `読み上げ: ${text}`;
 }
 
-async function initVoicevoxTsumugi() {
+function ensureAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === "suspended") {
+    void audioCtx.resume();
+  }
+}
+
+function playReelStopSound() {
   try {
-    const response = await fetch(`${VOICEVOX_URL}/speakers`);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const speakers = await response.json();
-    const tsumugi = speakers.find((speaker) => speaker.name === "春日部つむぎ");
-    if (!tsumugi || !tsumugi.styles || tsumugi.styles.length === 0) {
-      throw new Error("tsumugi speaker not found");
-    }
-
-    const normalStyle = tsumugi.styles.find((style) => style.name === "ノーマル");
-    speakerId = (normalStyle ?? tsumugi.styles[0]).id;
-    setVoiceState(`春日部つむぎ (style ${speakerId})`);
-    return true;
+    ensureAudioContext();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(68, audioCtx.currentTime + 0.09);
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.11);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.12);
   } catch (_error) {
+    // ignore audio errors
+  }
+}
+
+function playJackpotSound() {
+  try {
+    ensureAudioContext();
+    const notes = [392, 523.25, 659.25, 783.99];
+    notes.forEach((freq, index) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const t = audioCtx.currentTime + index * 0.07;
+      osc.type = "square";
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.2, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.16);
+    });
+  } catch (_error) {
+    // ignore audio errors
+  }
+}
+
+async function initVoicevoxTsumugi() {
+  const hosts = [...new Set([voiceHost, defaultVoiceHost, "127.0.0.1", "localhost"])];
+  let lastReason = "unknown";
+
+  try {
+    for (const host of hosts) {
+      const url = `http://${host}:50021`;
+      try {
+        const response = await fetch(`${url}/speakers`);
+        if (!response.ok) {
+          lastReason = `HTTP ${response.status}`;
+          continue;
+        }
+        const speakers = await response.json();
+        const tsumugi = speakers.find((speaker) => speaker.name === "春日部つむぎ");
+        if (!tsumugi || !tsumugi.styles || tsumugi.styles.length === 0) {
+          lastReason = "春日部つむぎが見つかりません";
+          continue;
+        }
+        const normal = tsumugi.styles.find((style) => style.name === "ノーマル");
+        speakerId = (normal ?? tsumugi.styles[0]).id;
+        voiceHost = host;
+        VOICEVOX_URL = url;
+        setVoiceState(`VOICEVOX 春日部つむぎ (${voiceHost}:50021, style ${speakerId})`);
+        return true;
+      } catch (e) {
+        lastReason = e instanceof Error ? e.message : "unknown";
+      }
+    }
+    throw new Error(lastReason);
+  } catch (error) {
     speakerId = null;
-    setVoiceState("VOICEVOX未接続（50021）");
+    const reason = error instanceof Error ? error.message : "unknown";
+    setVoiceState(`VOICEVOX未接続 (${voiceHost}:50021, ${reason})`);
     return false;
   }
 }
@@ -95,46 +166,44 @@ async function speak(text) {
       { method: "POST" },
     );
     if (!queryResponse.ok) {
-      throw new Error("audio_query failed");
+      throw new Error(`audio_query ${queryResponse.status}`);
     }
-
-    const query = await queryResponse.json();
-    query.speedScale = 1.08;
-    query.pitchScale = 0.02;
-    query.intonationScale = 1.18;
-    query.volumeScale = 1.1;
+    const audioQuery = await queryResponse.json();
+    audioQuery.speedScale = 1.06;
+    audioQuery.pitchScale = 0.02;
+    audioQuery.intonationScale = 1.2;
+    audioQuery.volumeScale = 1.2;
 
     const synthResponse = await fetch(`${VOICEVOX_URL}/synthesis?speaker=${speakerId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(query),
+      body: JSON.stringify(audioQuery),
     });
     if (!synthResponse.ok) {
-      throw new Error("synthesis failed");
+      throw new Error(`synthesis ${synthResponse.status}`);
     }
 
-    const audioBlob = await synthResponse.blob();
-    const audioUrl = URL.createObjectURL(audioBlob);
+    const blob = await synthResponse.blob();
+    const url = URL.createObjectURL(blob);
     if (currentAudio) {
       currentAudio.pause();
       currentAudio = null;
     }
-
-    const audio = new Audio(audioUrl);
+    const audio = new Audio(url);
     currentAudio = audio;
     audio.addEventListener("ended", () => {
-      URL.revokeObjectURL(audioUrl);
+      URL.revokeObjectURL(url);
       if (currentAudio === audio) {
         currentAudio = null;
       }
     });
     await audio.play();
-    setVoiceState(`春日部つむぎ (style ${speakerId})`);
+    setVoiceState(`VOICEVOX 春日部つむぎ (style ${speakerId})`);
   } catch (error) {
     const reason = error instanceof Error ? error.message : "unknown";
-    setVoiceState(`読み上げ失敗: ${reason}`);
+    setVoiceState(`VOICEVOX読み上げ失敗: ${reason}`);
   }
 }
 
@@ -181,6 +250,7 @@ function showResultPopup(isWin, amount = 0) {
 
   if (isWin) {
     jackpotBannerEl.textContent = amount >= 100 ? "超大当たり！" : "当たり！";
+    playJackpotSound();
   } else {
     jackpotBannerEl.textContent = "はずれ";
     jackpotBannerEl.classList.add("lose");
@@ -207,6 +277,7 @@ async function animateAndSet(finalSymbols) {
       setTimeout(() => {
         clearInterval(timer);
         reel.textContent = stopSymbol.icon;
+        playReelStopSound();
         reel.classList.remove("win-pop");
         reel.classList.add("win-pop");
         setTimeout(() => reel.classList.remove("win-pop"), 180);
@@ -293,11 +364,6 @@ resetBtn.addEventListener("click", () => {
 });
 
 voiceTestBtn.addEventListener("click", async () => {
-  const connected = await initVoicevoxTsumugi();
-  if (!connected) {
-    setCharacterLine("VOICEVOX ENGINEを起動してね．");
-    return;
-  }
   setCharacterLine("音声テストするよ．");
   await speak("音声テストです．春日部つむぎで読み上げています．");
 });

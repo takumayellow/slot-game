@@ -35,10 +35,10 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: url("../assets/tsumugi.png") no-repeat 18% 8%,
-    url("../assets/tsumugi.png") no-repeat -14% 86%;
-  background-size: min(920px, 108vw), min(320px, 44vw);
-  opacity: 0.42;
+  background: url("../assets/tsumugi.png") no-repeat 8% -3%,
+    url("../assets/tsumugi.png") no-repeat -20% 84%;
+  background-size: min(1020px, 124vw), min(340px, 46vw);
+  opacity: 0.44;
   transform: rotate(-2deg);
   pointer-events: none;
   z-index: 0;
@@ -395,10 +395,10 @@ body.win-mode .slot-app {
   }
 
   body::before {
-    background: url("../assets/tsumugi.png") no-repeat 12% 2%,
-      url("../assets/tsumugi.png") no-repeat -22% 84%;
-    background-size: min(820px, 118vw), min(220px, 40vw);
-    opacity: 0.5;
+    background: url("../assets/tsumugi.png") no-repeat 4% -8%,
+      url("../assets/tsumugi.png") no-repeat -30% 84%;
+    background-size: min(860px, 138vw), min(220px, 42vw);
+    opacity: 0.53;
     transform: rotate(-1deg);
   }
 
@@ -482,9 +482,9 @@ body.win-mode .slot-app {
 
 @media (max-width: 560px) and (orientation: portrait) {
   body::before {
-    background: url("../assets/tsumugi.png") no-repeat 18% 4%;
-    background-size: min(700px, 180vw);
-    opacity: 0.48;
+    background: url("../assets/tsumugi.png") no-repeat 8% -4%;
+    background-size: min(760px, 200vw);
+    opacity: 0.5;
     transform: none;
   }
 
