@@ -29,6 +29,7 @@ let speakerId = null;
 let currentAudio = null;
 const query = new URLSearchParams(window.location.search);
 const explicitVoiceApi = query.get("voiceApi");
+const allowFallbackSpeech = query.get("fallbackSpeech") === "1";
 const pageHost = window.location.hostname || "127.0.0.1";
 const defaultVoiceHost = pageHost === "localhost" ? "127.0.0.1" : pageHost;
 let voiceHost = query.get("voiceHost") || defaultVoiceHost;
@@ -152,8 +153,11 @@ function playJackpotSound() {
 
 async function initVoicevoxTsumugi() {
   if (window.location.protocol === "https:" && !explicitVoiceApi) {
-    // GitHub PagesはHTTPS配信なので，HTTPのlocalhost:50021は混在コンテンツで失敗する
-    initWebSpeechFallback();
+    if (allowFallbackSpeech) {
+      initWebSpeechFallback();
+    } else {
+      setVoiceState("VOICEVOX未接続（?voiceApi=https://... を指定）");
+    }
     return false;
   }
 
@@ -198,7 +202,9 @@ async function speak(text) {
   if (!speakerId) {
     const connected = await initVoicevoxTsumugi();
     if (!connected) {
-      speakWithWebSpeech(text);
+      if (allowFallbackSpeech) {
+        speakWithWebSpeech(text);
+      }
       return;
     }
   }
@@ -247,7 +253,9 @@ async function speak(text) {
   } catch (error) {
     const reason = error instanceof Error ? error.message : "unknown";
     setVoiceState(`VOICEVOX読み上げ失敗: ${reason}`);
-    speakWithWebSpeech(text);
+    if (allowFallbackSpeech) {
+      speakWithWebSpeech(text);
+    }
   }
 }
 
