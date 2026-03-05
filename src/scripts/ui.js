@@ -28,17 +28,10 @@ let spinning = false;
 let speakerId = null;
 let currentAudio = null;
 const query = new URLSearchParams(window.location.search);
-const explicitVoiceApi = query.get("voiceApi");
-const allowFallbackSpeech = query.get("fallbackSpeech") === "1";
-const pageHost = window.location.hostname || "127.0.0.1";
-const defaultVoiceHost = pageHost === "localhost" ? "127.0.0.1" : pageHost;
-let voiceHost = query.get("voiceHost") || defaultVoiceHost;
-let VOICEVOX_URL = explicitVoiceApi || `http://${voiceHost}:50021`;
-const TTS_QUEST_API = "https://api.tts.quest/v3/voicevox/synthesis";
-const TSUMUGI_SPEAKER_ID = 8;
-let voiceMode = "engine";
+const explicitVoiceApi = query.get("voiceApi"); // e.g. https://your-api.example.com/voicevox
+const VOICEVOX_URL = explicitVoiceApi || "/voicevox";
+const TARGET_SPEAKER_NAME = "春日部つむぎ";
 let audioCtx = null;
-let fallbackVoice = null;
 
 function randomIcon() {
   return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)].icon;
@@ -75,40 +68,6 @@ function ensureAudioContext() {
   if (audioCtx.state === "suspended") {
     void audioCtx.resume();
   }
-}
-
-function pickJapaneseVoice(voices) {
-  const jaVoices = voices.filter((voice) => voice.lang && voice.lang.toLowerCase().startsWith("ja"));
-  if (jaVoices.length === 0) {
-    return null;
-  }
-  return jaVoices[0];
-}
-
-function initWebSpeechFallback() {
-  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
-    fallbackVoice = null;
-    setVoiceState("音声未対応ブラウザ");
-    return;
-  }
-  const voices = window.speechSynthesis.getVoices();
-  fallbackVoice = pickJapaneseVoice(voices);
-  setVoiceState(fallbackVoice ? `ブラウザ音声 (${fallbackVoice.name})` : "ブラウザ音声（既定）");
-}
-
-function speakWithWebSpeech(text) {
-  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
-    return;
-  }
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = "ja-JP";
-  utter.rate = 1.03;
-  utter.pitch = 1.02;
-  if (fallbackVoice) {
-    utter.voice = fallbackVoice;
-  }
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utter);
 }
 
 function playReelStopSound() {
@@ -155,47 +114,26 @@ function playJackpotSound() {
 }
 
 async function initVoicevoxTsumugi() {
-  if (window.location.protocol === "https:" && !explicitVoiceApi) {
-    voiceMode = "ttsquest";
-    speakerId = TSUMUGI_SPEAKER_ID;
-    setVoiceState("VOICEVOX Web API (春日部つむぎ)");
-    return true;
-  }
-
-  const hosts = [...new Set([voiceHost, defaultVoiceHost, "127.0.0.1", "localhost"])];
-  let lastReason = "unknown";
-
   try {
-    for (const host of hosts) {
-      const url = `http://${host}:50021`;
-      try {
-        const response = await fetch(`${url}/speakers`);
-        if (!response.ok) {
-          lastReason = `HTTP ${response.status}`;
-          continue;
-        }
-        const speakers = await response.json();
-        const tsumugi = speakers.find((speaker) => speaker.name === "春日部つむぎ");
-        if (!tsumugi || !tsumugi.styles || tsumugi.styles.length === 0) {
-          lastReason = "春日部つむぎが見つかりません";
-          continue;
-        }
-        const normal = tsumugi.styles.find((style) => style.name === "ノーマル");
-        speakerId = (normal ?? tsumugi.styles[0]).id;
-        voiceHost = host;
-        VOICEVOX_URL = url;
-        voiceMode = "engine";
-        setVoiceState(`VOICEVOX 春日部つむぎ (${voiceHost}:50021, style ${speakerId})`);
-        return true;
-      } catch (e) {
-        lastReason = e instanceof Error ? e.message : "unknown";
-      }
+    const response = await fetch(`${VOICEVOX_URL}/speakers`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
-    throw new Error(lastReason);
+
+    const speakers = await response.json();
+    const tsumugi = speakers.find((speaker) => speaker.name === TARGET_SPEAKER_NAME);
+    if (!tsumugi || !tsumugi.styles || tsumugi.styles.length === 0) {
+      throw new Error(`${TARGET_SPEAKER_NAME} が見つかりません`);
+    }
+
+    const normal = tsumugi.styles.find((style) => style.name === "ノーマル");
+    speakerId = (normal ?? tsumugi.styles[0]).id;
+    setVoiceState(`VOICEVOX ${TARGET_SPEAKER_NAME} (speaker=${speakerId})`);
+    return true;
   } catch (error) {
     speakerId = null;
     const reason = error instanceof Error ? error.message : "unknown";
-    setVoiceState(`VOICEVOX未接続 (${voiceHost}:50021, ${reason})`);
+    setVoiceState(`VOICEVOX未接続 (${VOICEVOX_URL}, ${reason})`);
     return false;
   }
 }
@@ -215,43 +153,15 @@ async function playAudioFromUrl(url) {
   await audio.play();
 }
 
-async function speakWithTtsQuest(text) {
-  const url = `${TTS_QUEST_API}?text=${encodeURIComponent(text)}&speaker=${TSUMUGI_SPEAKER_ID}`;
-  const response = await fetch(url, { method: "GET" });
-  if (!response.ok) {
-    throw new Error(`tts.quest ${response.status}`);
-  }
-  const data = await response.json();
-  if (!data.success) {
-    const retry = typeof data.retryAfter === "number" ? `retryAfter=${data.retryAfter}` : "unknown";
-    throw new Error(`tts.quest failed (${retry})`);
-  }
-
-  const streamUrl = data.mp3StreamingUrl || data.mp3DownloadUrl;
-  if (!streamUrl) {
-    throw new Error("audio url not found");
-  }
-  await playAudioFromUrl(streamUrl);
-  setVoiceState("VOICEVOX Web API (春日部つむぎ)");
-}
-
 async function speak(text) {
   if (!speakerId) {
     const connected = await initVoicevoxTsumugi();
     if (!connected) {
-      if (allowFallbackSpeech) {
-        speakWithWebSpeech(text);
-      }
       return;
     }
   }
 
   try {
-    if (voiceMode === "ttsquest") {
-      await speakWithTtsQuest(text);
-      return;
-    }
-
     const queryResponse = await fetch(
       `${VOICEVOX_URL}/audio_query?text=${encodeURIComponent(text)}&speaker=${speakerId}`,
       { method: "POST" },
@@ -279,13 +189,10 @@ async function speak(text) {
     const blob = await synthResponse.blob();
     const url = URL.createObjectURL(blob);
     await playAudioFromUrl(url);
-    setVoiceState(`VOICEVOX 春日部つむぎ (style ${speakerId})`);
+    setVoiceState(`VOICEVOX ${TARGET_SPEAKER_NAME} (speaker=${speakerId})`);
   } catch (error) {
     const reason = error instanceof Error ? error.message : "unknown";
     setVoiceState(`VOICEVOX読み上げ失敗: ${reason}`);
-    if (allowFallbackSpeech) {
-      speakWithWebSpeech(text);
-    }
   }
 }
 
