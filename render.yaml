@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: slot-voicevox-proxy
+    runtime: docker
+    repo: https://github.com/takumayellow/slot-game
+    rootDir: proxy
+    plan: free
+    envVars:
+      - key: VOICEVOX_ENGINE_URL
+        value: https://your-voicevox-engine-host
+      - key: CORS_ALLOW_ORIGINS
+        value: https://takumayellow.github.io
