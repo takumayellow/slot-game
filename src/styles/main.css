@@ -311,6 +311,12 @@ button.spin {
   animation: bannerPop 1000ms ease-out;
 }
 
+.jackpot-banner.lose {
+  background: rgba(30, 35, 52, 0.9);
+  color: #d8e3ff;
+  border-color: rgba(190, 205, 255, 0.45);
+}
+
 .reel.win-pop {
   animation: reelPop 360ms ease-out;
   box-shadow: 0 0 30px rgba(255, 218, 113, 0.44);

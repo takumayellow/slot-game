@@ -164,15 +164,23 @@ function triggerWinEffect(amount) {
     winFxEl.innerHTML = "";
   }, 900);
 
-  if (amount >= 50) {
-    jackpotBannerEl.classList.remove("show");
-    void jackpotBannerEl.offsetWidth;
-    jackpotBannerEl.classList.add("show");
-    jackpotBannerEl.textContent = amount >= 100 ? "MEGA WIN!" : "BIG WIN!";
-    setTimeout(() => {
-      jackpotBannerEl.classList.remove("show");
-    }, 1050);
+}
+
+function showResultPopup(isWin, amount = 0) {
+  jackpotBannerEl.classList.remove("show", "lose");
+  void jackpotBannerEl.offsetWidth;
+
+  if (isWin) {
+    jackpotBannerEl.textContent = amount >= 100 ? "超大当たり！" : "当たり！";
+  } else {
+    jackpotBannerEl.textContent = "はずれ";
+    jackpotBannerEl.classList.add("lose");
   }
+
+  jackpotBannerEl.classList.add("show");
+  setTimeout(() => {
+    jackpotBannerEl.classList.remove("show", "lose");
+  }, 1050);
 }
 
 async function animateAndSet(finalSymbols) {
@@ -217,7 +225,7 @@ async function onSpin() {
 
   spinning = true;
   updatePanel();
-  setMessage("Spinning...", false);
+  setMessage("回転中...", false);
 
   await animateAndSet(result.reels);
 
@@ -225,8 +233,9 @@ async function onSpin() {
   updatePanel();
 
   if (result.win > 0) {
-    setMessage(`${result.reason} +${result.win}`, true);
+    setMessage(`${result.reason} +${result.win}枚`, true);
     triggerWinEffect(result.win);
+    showResultPopup(true, result.win);
     const cherryCount = result.reels.filter((symbol) => symbol.key === "CHERRY").length;
     if (result.win >= 100) {
       setCharacterLine("大当たり！ このまま連チャン狙おう．");
@@ -239,7 +248,8 @@ async function onSpin() {
       void speak("いい感じ．まだまだいけるよ．");
     }
   } else {
-    setMessage("No Win... Try again.", false);
+    setMessage("はずれ... もう1回！", false);
+    showResultPopup(false);
     if (engine.credit <= 10) {
       setCharacterLine("いったんベットを下げて立て直そう．");
       void speak("いったんベットを下げて立て直そう．");
@@ -275,6 +285,6 @@ resetBtn.addEventListener("click", () => {
 
 fillPayTable();
 updatePanel();
-setMessage("Ready. Press SPIN.");
+setMessage("準備OK．SPINを押してスタート！");
 setCharacterLine("赤い台で勝負開始だよ．");
 void initVoicevoxTsumugi();

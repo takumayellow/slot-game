@@ -20,7 +20,7 @@ function evaluate(reels, bet) {
     const amount = reels[0].payout * bet;
     return {
       win: amount,
-      reason: `${reels[0].name} x3!`,
+      reason: `${reels[0].name}3つ揃い`,
     };
   }
 
@@ -29,13 +29,13 @@ function evaluate(reels, bet) {
     const amount = RULES.cherryPairMultiplier * bet;
     return {
       win: amount,
-      reason: "Cherry Pair!",
+      reason: "チェリー2個",
     };
   }
 
   return {
     win: 0,
-    reason: "No Win",
+    reason: "はずれ",
   };
 }
 
