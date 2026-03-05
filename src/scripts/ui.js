@@ -29,7 +29,6 @@ let speakerId = null;
 let currentAudio = null;
 const query = new URLSearchParams(window.location.search);
 const explicitVoiceApi = query.get("voiceApi"); // e.g. https://your-api.example.com/voicevox
-const isPagesHost = window.location.hostname.endsWith("github.io");
 const VOICEVOX_URL = explicitVoiceApi || "/voicevox";
 const TARGET_SPEAKER_NAME = "春日部つむぎ";
 let audioCtx = null;
@@ -115,7 +114,7 @@ function playJackpotSound() {
 }
 
 async function initVoicevoxTsumugi() {
-  if (isPagesHost && !explicitVoiceApi) {
+  if (window.location.protocol === "https:" && !explicitVoiceApi) {
     speakerId = null;
     setVoiceState("VOICEVOX未接続（URLに ?voiceApi=https://<proxy>/voicevox を指定）");
     return false;
