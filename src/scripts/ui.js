@@ -176,17 +176,30 @@ function triggerWinEffect(amount) {
 }
 
 async function animateAndSet(finalSymbols) {
-  const frames = 16;
-  for (let i = 0; i < frames; i += 1) {
-    reelEls.forEach((element) => {
-      element.textContent = randomIcon();
-    });
-    await new Promise((resolve) => setTimeout(resolve, 45));
-  }
+  const baseSpinMs = 460;
+  const stopDelayMs = 260;
+  const frameMs = 42;
 
-  finalSymbols.forEach((symbol, index) => {
-    reelEls[index].textContent = symbol.icon;
-  });
+  const spinOneReel = (reelIndex, stopSymbol, totalMs) =>
+    new Promise((resolve) => {
+      const reel = reelEls[reelIndex];
+      const timer = setInterval(() => {
+        reel.textContent = randomIcon();
+      }, frameMs);
+
+      setTimeout(() => {
+        clearInterval(timer);
+        reel.textContent = stopSymbol.icon;
+        reel.classList.remove("win-pop");
+        reel.classList.add("win-pop");
+        setTimeout(() => reel.classList.remove("win-pop"), 180);
+        resolve();
+      }, totalMs);
+    });
+
+  await spinOneReel(0, finalSymbols[0], baseSpinMs);
+  await spinOneReel(1, finalSymbols[1], baseSpinMs + stopDelayMs);
+  await spinOneReel(2, finalSymbols[2], baseSpinMs + stopDelayMs * 2);
 }
 
 async function onSpin() {
