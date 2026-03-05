@@ -28,11 +28,13 @@ let spinning = false;
 let speakerId = null;
 let currentAudio = null;
 const query = new URLSearchParams(window.location.search);
+const explicitVoiceApi = query.get("voiceApi");
 const pageHost = window.location.hostname || "127.0.0.1";
 const defaultVoiceHost = pageHost === "localhost" ? "127.0.0.1" : pageHost;
 let voiceHost = query.get("voiceHost") || defaultVoiceHost;
-let VOICEVOX_URL = `http://${voiceHost}:50021`;
+let VOICEVOX_URL = explicitVoiceApi || `http://${voiceHost}:50021`;
 let audioCtx = null;
+let fallbackVoice = null;
 
 function randomIcon() {
   return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)].icon;
@@ -69,6 +71,40 @@ function ensureAudioContext() {
   if (audioCtx.state === "suspended") {
     void audioCtx.resume();
   }
+}
+
+function pickJapaneseVoice(voices) {
+  const jaVoices = voices.filter((voice) => voice.lang && voice.lang.toLowerCase().startsWith("ja"));
+  if (jaVoices.length === 0) {
+    return null;
+  }
+  return jaVoices[0];
+}
+
+function initWebSpeechFallback() {
+  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+    fallbackVoice = null;
+    setVoiceState("音声未対応ブラウザ");
+    return;
+  }
+  const voices = window.speechSynthesis.getVoices();
+  fallbackVoice = pickJapaneseVoice(voices);
+  setVoiceState(fallbackVoice ? `ブラウザ音声 (${fallbackVoice.name})` : "ブラウザ音声（既定）");
+}
+
+function speakWithWebSpeech(text) {
+  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+    return;
+  }
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "ja-JP";
+  utter.rate = 1.03;
+  utter.pitch = 1.02;
+  if (fallbackVoice) {
+    utter.voice = fallbackVoice;
+  }
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utter);
 }
 
 function playReelStopSound() {
@@ -115,6 +151,12 @@ function playJackpotSound() {
 }
 
 async function initVoicevoxTsumugi() {
+  if (window.location.protocol === "https:" && !explicitVoiceApi) {
+    // GitHub PagesはHTTPS配信なので，HTTPのlocalhost:50021は混在コンテンツで失敗する
+    initWebSpeechFallback();
+    return false;
+  }
+
   const hosts = [...new Set([voiceHost, defaultVoiceHost, "127.0.0.1", "localhost"])];
   let lastReason = "unknown";
 
@@ -156,6 +198,7 @@ async function speak(text) {
   if (!speakerId) {
     const connected = await initVoicevoxTsumugi();
     if (!connected) {
+      speakWithWebSpeech(text);
       return;
     }
   }
@@ -204,6 +247,7 @@ async function speak(text) {
   } catch (error) {
     const reason = error instanceof Error ? error.message : "unknown";
     setVoiceState(`VOICEVOX読み上げ失敗: ${reason}`);
+    speakWithWebSpeech(text);
   }
 }
 
