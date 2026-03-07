@@ -27,6 +27,7 @@ const voiceTestBtn = document.getElementById("voiceTest");
 let spinning = false;
 let speakerId = null;
 let currentAudio = null;
+let isSpeaking = false;
 const query = new URLSearchParams(window.location.search);
 const explicitVoiceApi = query.get("voiceApi"); // e.g. https://your-api.example.com/voicevox
 const VOICEVOX_URL = explicitVoiceApi || "/voicevox";
@@ -120,46 +121,64 @@ async function initVoicevoxTsumugi() {
     return false;
   }
 
-  try {
-    const response = await fetch(`${VOICEVOX_URL}/speakers`);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+  const MAX_RETRIES = 3;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(`${VOICEVOX_URL}/speakers`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
-    const speakers = await response.json();
-    const tsumugi = speakers.find((speaker) => speaker.name === TARGET_SPEAKER_NAME);
-    if (!tsumugi || !tsumugi.styles || tsumugi.styles.length === 0) {
-      throw new Error(`${TARGET_SPEAKER_NAME} が見つかりません`);
-    }
+      const speakers = await response.json();
+      const tsumugi = speakers.find((speaker) => speaker.name === TARGET_SPEAKER_NAME);
+      if (!tsumugi || !tsumugi.styles || tsumugi.styles.length === 0) {
+        throw new Error(`${TARGET_SPEAKER_NAME} が見つかりません`);
+      }
 
-    const normal = tsumugi.styles.find((style) => style.name === "ノーマル");
-    speakerId = (normal ?? tsumugi.styles[0]).id;
-    setVoiceState(`VOICEVOX ${TARGET_SPEAKER_NAME} (speaker=${speakerId})`);
-    return true;
-  } catch (error) {
-    speakerId = null;
-    const reason = error instanceof Error ? error.message : "unknown";
-    setVoiceState(`VOICEVOX未接続 (${VOICEVOX_URL}, ${reason})`);
-    return false;
+      const normal = tsumugi.styles.find((style) => style.name === "ノーマル");
+      speakerId = (normal ?? tsumugi.styles[0]).id;
+      setVoiceState(`VOICEVOX ${TARGET_SPEAKER_NAME} (speaker=${speakerId})`);
+      return true;
+    } catch (error) {
+      if (attempt < MAX_RETRIES) {
+        setVoiceState(`VOICEVOX接続試行中... (${attempt}/${MAX_RETRIES})`);
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+        continue;
+      }
+      speakerId = null;
+      const reason = error instanceof Error ? error.message : "unknown";
+      setVoiceState(`VOICEVOX未接続 (${VOICEVOX_URL}, ${reason})`);
+      return false;
+    }
   }
+  return false;
 }
 
 async function playAudioFromUrl(url) {
   if (currentAudio) {
+    const prevSrc = currentAudio.src;
     currentAudio.pause();
     currentAudio = null;
+    if (prevSrc && prevSrc.startsWith("blob:")) {
+      URL.revokeObjectURL(prevSrc);
+    }
   }
   const audio = new Audio(url);
   currentAudio = audio;
   if (url.startsWith("blob:")) {
     audio.addEventListener("ended", () => {
       URL.revokeObjectURL(url);
+      if (currentAudio === audio) {
+        currentAudio = null;
+      }
     });
   }
   await audio.play();
 }
 
 async function speak(text) {
+  if (isSpeaking) return;
+
   if (!speakerId) {
     const connected = await initVoicevoxTsumugi();
     if (!connected) {
@@ -167,6 +186,8 @@ async function speak(text) {
     }
   }
 
+  isSpeaking = true;
+  let audioUrl = null;
   try {
     const queryResponse = await fetch(
       `${VOICEVOX_URL}/audio_query?text=${encodeURIComponent(text)}&speaker=${speakerId}`,
@@ -193,12 +214,26 @@ async function speak(text) {
     }
 
     const blob = await synthResponse.blob();
-    const url = URL.createObjectURL(blob);
-    await playAudioFromUrl(url);
+    audioUrl = URL.createObjectURL(blob);
     setVoiceState(`VOICEVOX ${TARGET_SPEAKER_NAME} (speaker=${speakerId})`);
   } catch (error) {
+    speakerId = null;
+    isSpeaking = false;
     const reason = error instanceof Error ? error.message : "unknown";
     setVoiceState(`VOICEVOX読み上げ失敗: ${reason}`);
+    return;
+  }
+
+  isSpeaking = false;
+
+  try {
+    await playAudioFromUrl(audioUrl);
+  } catch (error) {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    const reason = error instanceof Error ? error.message : "unknown";
+    setVoiceState(`音声再生失敗: ${reason}`);
   }
 }
 
