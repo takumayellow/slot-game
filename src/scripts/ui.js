@@ -30,7 +30,7 @@ let currentAudio = null;
 let isSpeaking = false;
 const query = new URLSearchParams(window.location.search);
 const explicitVoiceApi = query.get("voiceApi"); // e.g. https://your-api.example.com/voicevox
-const VOICEVOX_URL = explicitVoiceApi || "/voicevox";
+const VOICEVOX_URL = (explicitVoiceApi || "").replace(/\/+$/, "") || "/voicevox";
 const TARGET_SPEAKER_NAME = "春日部つむぎ";
 let audioCtx = null;
 
