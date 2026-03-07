@@ -144,12 +144,6 @@ function playJackpotSound() {
 }
 
 async function initVoicevoxTsumugi() {
-  if (window.location.protocol === "https:" && !explicitVoiceApi) {
-    speakerId = null;
-    setVoiceState("VOICEVOX未接続（URLに ?voiceApi=https://<proxy>/voicevox を指定）");
-    return false;
-  }
-
   const MAX_RETRIES = 3;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -176,7 +170,11 @@ async function initVoicevoxTsumugi() {
       }
       speakerId = null;
       const reason = error instanceof Error ? error.message : "unknown";
-      setVoiceState(`VOICEVOX未接続 (${VOICEVOX_URL}, ${reason})`);
+      const hint =
+        window.location.protocol === "https:" && !explicitVoiceApi
+          ? "（必要ならURLに ?voiceApi=https://<proxy>/voicevox を指定）"
+          : "";
+      setVoiceState(`VOICEVOX未接続 (${VOICEVOX_URL}, ${reason})${hint}`);
       return false;
     }
   }
