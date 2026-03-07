@@ -1,4 +1,14 @@
 services:
+  - type: pserv
+    name: voicevox-engine
+    runtime: image
+    image:
+      url: docker.io/voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+    plan: starter
+    envVars:
+      - key: PORT
+        value: 50021
+
   - type: web
     name: slot-voicevox-proxy
     runtime: docker
@@ -7,6 +17,6 @@ services:
     plan: free
     envVars:
       - key: VOICEVOX_ENGINE_URL
-        value: https://your-voicevox-engine-host
+        value: http://voicevox-engine:50021
       - key: CORS_ALLOW_ORIGINS
         value: https://takumayellow.github.io
