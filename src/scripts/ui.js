@@ -72,31 +72,44 @@ function ensureAudioContext() {
 }
 
 async function unlockAudioOnGesture() {
-  // Unlock Web Audio API (AudioContext) within user gesture so iOS allows it
   ensureAudioContext();
-  if (audioCtx && audioCtx.state === "suspended") {
-    try {
-      await audioCtx.resume();
-    } catch {
-      // ignore
-    }
-  }
 
-  // Unlock HTML Audio element for iOS/mobile by playing a silent clip
+  // Initiate BOTH operations synchronously within the user gesture context
+  // (before any await), so iOS recognises them as gesture-triggered.
+  const resumePromise =
+    audioCtx && audioCtx.state === "suspended" ? audioCtx.resume() : null;
+
+  let silent, silentPlayPromise;
   try {
-    const silent = new Audio(
+    silent = new Audio(
       "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=",
     );
     silent.muted = true;
-    const playPromise = silent.play();
-    if (playPromise !== undefined) {
-      await playPromise;
+    silentPlayPromise = silent.play();
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : String(e);
+    setVoiceState(`音声解放失敗: ${reason}`);
+  }
+
+  // Await results now that both have been kicked off.
+  if (resumePromise) {
+    try {
+      await resumePromise;
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : String(e);
+      setMessage(`AudioContext再開失敗: ${reason}`, false);
     }
-    silent.pause();
-    silent.muted = false;
-    silent.src = "";
-  } catch {
-    // ignore – not all platforms need this
+  }
+
+  if (silentPlayPromise !== undefined) {
+    try {
+      await silentPlayPromise;
+      silent.pause();
+      silent.src = "";
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : String(e);
+      setVoiceState(`音声解放失敗: ${reason}`);
+    }
   }
 }
 
