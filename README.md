@@ -30,18 +30,22 @@ python -m http.server 8080
 ## VOICEVOX連携
 
 - 春日部つむぎ音声は VOICEVOX API で再生します．
-- 既定の接続先は `/voicevox` です（同一オリジンのプロキシ想定）．
-- ローカル開発では Vite などで `/voicevox -> http://127.0.0.1:50021` をプロキシしてください．
-- GitHub Pages で使う場合は，`voiceApi` で HTTPS の中継APIを指定してください．
-- GitHub Pages 単体では，ブラウザから `localhost:50021` へ直接接続できないため，中継なし運用はできません．
+- フロントエンドは既定で `https://slot-voicevox-proxy.onrender.com/voicevox` へ接続します．
+- 別のプロキシを使う場合は `?voiceApi=https://<your-proxy>/voicevox` で上書きできます．
+- `render.yaml` に Render.com 用の構成を同梱しています．
 
-例:
+## デプロイ構成（Render.com）
 
-```text
-https://<user>.github.io/slot-game/?voiceApi=https://<your-voicevox-proxy>
-```
+`render.yaml` には 2 つのサービスが定義されています:
 
-- 正しい春日部つむぎ音声を優先するため，ブラウザ音声フォールバックは使いません．
+| サービス名 | 種別 | 用途 |
+|---|---|---|
+| `voicevox-engine` | Private Service (Docker Image) | VOICEVOX Engine 本体 |
+| `slot-voicevox-proxy` | Web Service (Docker) | CORS 対応の中継プロキシ |
+
+Render.com で `render.yaml` を使い Blueprint としてデプロイすると，`voicevox-engine` が内部ネットワークで起動し，プロキシが `http://voicevox-engine:50021` 経由で接続します．
+
+> **注意**: `voicevox-engine` サービスは CPU 版 Docker イメージを使用するため，`starter` プラン（512MB 以上の RAM）が必要です．
 
 ## 付属プロキシサーバー
 
