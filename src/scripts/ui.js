@@ -1,4 +1,5 @@
 import { SlotEngine, SYMBOLS, RULES } from "./engine.js";
+import { VOICEVOX_CONFIG } from "./config.js";
 
 const engine = new SlotEngine();
 
@@ -29,9 +30,9 @@ let speakerId = null;
 let currentAudio = null;
 let isSpeaking = false;
 const query = new URLSearchParams(window.location.search);
-const explicitVoiceApi = query.get("voiceApi"); // e.g. https://your-api.example.com/voicevox
-const VOICEVOX_URL = explicitVoiceApi || "/voicevox";
-const TARGET_SPEAKER_NAME = "春日部つむぎ";
+const explicitVoiceApi = query.get("voiceApi"); // e.g. https://your-proxy.onrender.com/voicevox
+const VOICEVOX_URL = explicitVoiceApi || VOICEVOX_CONFIG.defaultProxyUrl;
+const TARGET_SPEAKER_NAME = VOICEVOX_CONFIG.targetSpeakerName;
 let audioCtx = null;
 
 function randomIcon() {
@@ -144,12 +145,6 @@ function playJackpotSound() {
 }
 
 async function initVoicevoxTsumugi() {
-  if (window.location.protocol === "https:" && !explicitVoiceApi) {
-    speakerId = null;
-    setVoiceState("VOICEVOX未接続（URLに ?voiceApi=https://<proxy>/voicevox を指定）");
-    return false;
-  }
-
   const MAX_RETRIES = 3;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {

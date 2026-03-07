@@ -13,3 +13,10 @@ export const RULES = {
   maxBet: 5,
   cherryPairMultiplier: 2,
 };
+
+export const VOICEVOX_CONFIG = {
+  // Default proxy URL for the deployed environment (Render.com).
+  // Override via ?voiceApi=<url> query parameter.
+  defaultProxyUrl: "https://slot-voicevox-proxy.onrender.com/voicevox",
+  targetSpeakerName: "春日部つむぎ",
+};
