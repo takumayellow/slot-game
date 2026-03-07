@@ -71,6 +71,35 @@ function ensureAudioContext() {
   }
 }
 
+async function unlockAudioOnGesture() {
+  // Unlock Web Audio API (AudioContext) within user gesture so iOS allows it
+  ensureAudioContext();
+  if (audioCtx && audioCtx.state === "suspended") {
+    try {
+      await audioCtx.resume();
+    } catch {
+      // ignore
+    }
+  }
+
+  // Unlock HTML Audio element for iOS/mobile by playing a silent clip
+  try {
+    const silent = new Audio(
+      "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=",
+    );
+    silent.muted = true;
+    const playPromise = silent.play();
+    if (playPromise !== undefined) {
+      await playPromise;
+    }
+    silent.pause();
+    silent.muted = false;
+    silent.src = "";
+  } catch {
+    // ignore – not all platforms need this
+  }
+}
+
 function playReelStopSound() {
   try {
     ensureAudioContext();
@@ -325,6 +354,8 @@ async function onSpin() {
     return;
   }
 
+  await unlockAudioOnGesture();
+
   const result = engine.spin();
   if (!result.success) {
     setMessage(result.error, false);
@@ -382,7 +413,8 @@ betDownBtn.addEventListener("click", () => {
   updatePanel();
 });
 
-resetBtn.addEventListener("click", () => {
+resetBtn.addEventListener("click", async () => {
+  await unlockAudioOnGesture();
   engine.reset();
   reelEls[0].textContent = "🍒";
   reelEls[1].textContent = "🍋";
@@ -394,6 +426,7 @@ resetBtn.addEventListener("click", () => {
 });
 
 voiceTestBtn.addEventListener("click", async () => {
+  await unlockAudioOnGesture();
   setCharacterLine("音声テストするよ．");
   await speak("音声テストです．春日部つむぎで読み上げています．");
 });
