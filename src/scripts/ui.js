@@ -30,7 +30,14 @@ let currentAudio = null;
 let isSpeaking = false;
 const query = new URLSearchParams(window.location.search);
 const explicitVoiceApi = query.get("voiceApi") || localStorage.getItem("voiceApi") || null;
-let VOICEVOX_URL = explicitVoiceApi || "/voicevox";
+function getDefaultVoicevoxUrl() {
+  const { protocol, hostname } = window.location;
+  if (protocol === "http:" && (hostname === "localhost" || hostname === "127.0.0.1")) {
+    return "http://localhost:50021";
+  }
+  return "/voicevox";
+}
+let VOICEVOX_URL = explicitVoiceApi || getDefaultVoicevoxUrl();
 const TARGET_SPEAKER_NAME = "春日部つむぎ";
 let audioCtx = null;
 
