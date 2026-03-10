@@ -33,7 +33,7 @@ const explicitVoiceApi = query.get("voiceApi") || localStorage.getItem("voiceApi
 function getDefaultVoicevoxUrl() {
   const { protocol, hostname } = window.location;
   if (protocol === "http:" && (hostname === "localhost" || hostname === "127.0.0.1")) {
-    return "http://localhost:50021";
+    return "http://localhost:10101"; // AivisSpeech default port
   }
   return "/voicevox";
 }
@@ -174,14 +174,15 @@ async function initVoicevoxTsumugi() {
       }
 
       const speakers = await response.json();
-      const tsumugi = speakers.find((speaker) => speaker.name === TARGET_SPEAKER_NAME);
-      if (!tsumugi || !tsumugi.styles || tsumugi.styles.length === 0) {
-        throw new Error(`${TARGET_SPEAKER_NAME} が見つかりません`);
+      const target = speakers.find((speaker) => speaker.name === TARGET_SPEAKER_NAME);
+      const speaker = target ?? speakers[0];
+      if (!speaker || !speaker.styles || speaker.styles.length === 0) {
+        throw new Error("利用可能なスピーカーが見つかりません");
       }
 
-      const normal = tsumugi.styles.find((style) => style.name === "ノーマル");
-      speakerId = (normal ?? tsumugi.styles[0]).id;
-      setVoiceState(`VOICEVOX ${TARGET_SPEAKER_NAME} (speaker=${speakerId})`);
+      const normal = speaker.styles.find((style) => style.name === "ノーマル");
+      speakerId = (normal ?? speaker.styles[0]).id;
+      setVoiceState(`音声: ${speaker.name} (id=${speakerId})`);
       return true;
     } catch (error) {
       if (attempt < MAX_RETRIES) {
