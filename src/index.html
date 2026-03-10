@@ -14,7 +14,10 @@
         <div>
           <h1>Tsumugi Pachi Slot</h1>
           <p class="sub">Red Impact Machine</p>
-          <p class="voice-state" id="voiceState">読み上げ: 接続中...</p>
+          <div class="voice-state-row">
+            <p class="voice-state" id="voiceState">読み上げ: 接続中...</p>
+            <button id="voiceSettingsBtn" type="button" class="voice-settings-btn" title="音声設定">⚙</button>
+          </div>
         </div>
         <div class="character">
           <div class="avatar" aria-hidden="true">
@@ -65,6 +68,21 @@
         </aside>
       </section>
     </main>
+
+    <dialog id="voiceSettingsDialog" class="voice-settings-dialog" aria-labelledby="voiceSettingsTitle">
+      <h3 id="voiceSettingsTitle">音声設定（VOICEVOX プロキシ）</h3>
+      <p class="dialog-hint">GitHub Pages など HTTPS 環境では、HTTPS 対応のプロキシ URL が必要です。<br>ローカル開発時は空欄のままでOK。</p>
+      <label class="dialog-label">
+        プロキシ URL
+        <input type="url" id="voiceApiInput" class="dialog-input" placeholder="https://your-proxy.example.com/voicevox" />
+      </label>
+      <p class="dialog-current" id="dialogCurrentUrl"></p>
+      <div class="dialog-actions">
+        <button id="voiceApiSave" type="button" class="btn-primary">保存して接続</button>
+        <button id="voiceApiClear" type="button">クリア</button>
+        <button id="voiceApiCancel" type="button">キャンセル</button>
+      </div>
+    </dialog>
 
     <script type="module" src="./scripts/ui.js"></script>
   </body>

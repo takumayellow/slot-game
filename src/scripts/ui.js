@@ -29,10 +29,18 @@ let speakerId = null;
 let currentAudio = null;
 let isSpeaking = false;
 const query = new URLSearchParams(window.location.search);
-const explicitVoiceApi = query.get("voiceApi"); // e.g. https://your-api.example.com/voicevox
-const VOICEVOX_URL = explicitVoiceApi || "/voicevox";
+const explicitVoiceApi = query.get("voiceApi") || localStorage.getItem("voiceApi") || null;
+let VOICEVOX_URL = explicitVoiceApi || "/voicevox";
 const TARGET_SPEAKER_NAME = "春日部つむぎ";
 let audioCtx = null;
+
+const voiceSettingsBtn = document.getElementById("voiceSettingsBtn");
+const voiceSettingsDialog = document.getElementById("voiceSettingsDialog");
+const voiceApiInput = document.getElementById("voiceApiInput");
+const voiceApiSave = document.getElementById("voiceApiSave");
+const voiceApiClear = document.getElementById("voiceApiClear");
+const voiceApiCancel = document.getElementById("voiceApiCancel");
+const dialogCurrentUrl = document.getElementById("dialogCurrentUrl");
 
 function randomIcon() {
   return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)].icon;
@@ -144,6 +152,12 @@ function playJackpotSound() {
 }
 
 async function initVoicevoxTsumugi() {
+  if (window.location.protocol === "https:" && VOICEVOX_URL === "/voicevox") {
+    speakerId = null;
+    setVoiceState("VOICEVOX未接続（⚙ を押してプロキシURLを設定）");
+    return false;
+  }
+
   const MAX_RETRIES = 3;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -170,11 +184,7 @@ async function initVoicevoxTsumugi() {
       }
       speakerId = null;
       const reason = error instanceof Error ? error.message : "unknown";
-      const hint =
-        window.location.protocol === "https:" && !explicitVoiceApi
-          ? "（必要ならURLに ?voiceApi=https://<proxy>/voicevox を指定）"
-          : "";
-      setVoiceState(`VOICEVOX未接続 (${VOICEVOX_URL}, ${reason})${hint}`);
+      setVoiceState(`VOICEVOX未接続 (${VOICEVOX_URL}, ${reason})`);
       return false;
     }
   }
@@ -427,6 +437,55 @@ voiceTestBtn.addEventListener("click", async () => {
   await unlockAudioOnGesture();
   setCharacterLine("音声テストするよ．");
   await speak("音声テストです．春日部つむぎで読み上げています．");
+});
+
+voiceSettingsBtn.addEventListener("click", () => {
+  const saved = localStorage.getItem("voiceApi") || "";
+  voiceApiInput.value = VOICEVOX_URL !== "/voicevox" ? VOICEVOX_URL : saved;
+  dialogCurrentUrl.textContent = VOICEVOX_URL !== "/voicevox"
+    ? `現在: ${VOICEVOX_URL}`
+    : "現在: ローカル（/voicevox）";
+  voiceSettingsDialog.showModal();
+});
+
+voiceApiSave.addEventListener("click", async () => {
+  const newUrl = voiceApiInput.value.trim().replace(/\/+$/, "");
+  if (newUrl) {
+    try {
+      const parsed = new URL(newUrl);
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        alert("http:// または https:// のURLを入力してください");
+        return;
+      }
+    } catch {
+      alert("有効なURLを入力してください");
+      return;
+    }
+    localStorage.setItem("voiceApi", newUrl);
+    VOICEVOX_URL = newUrl;
+  } else {
+    localStorage.removeItem("voiceApi");
+    VOICEVOX_URL = "/voicevox";
+  }
+  speakerId = null;
+  voiceSettingsDialog.close();
+  await initVoicevoxTsumugi();
+});
+
+voiceApiClear.addEventListener("click", () => {
+  localStorage.removeItem("voiceApi");
+  voiceApiInput.value = "";
+  dialogCurrentUrl.textContent = "クリア後に「保存して接続」を押してください";
+});
+
+voiceApiCancel.addEventListener("click", () => {
+  voiceSettingsDialog.close();
+});
+
+voiceSettingsDialog.addEventListener("click", (e) => {
+  if (e.target === voiceSettingsDialog) {
+    voiceSettingsDialog.close();
+  }
 });
 
 fillPayTable();
