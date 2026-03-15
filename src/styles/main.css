@@ -461,6 +461,70 @@ body.win-mode .slot-app {
   100% { transform: scale(1); }
 }
 
+/* ── Win Streak Section ── */
+.streak-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.streak-section.streak-active {
+  background: rgba(255, 224, 102, 0.07);
+  border-color: rgba(255, 200, 60, 0.4);
+}
+
+.streak-section.streak-hot {
+  background: rgba(255, 100, 30, 0.1);
+  border-color: rgba(255, 120, 30, 0.6);
+  animation: streakPulse 1.2s ease-in-out infinite;
+}
+
+.streak-info {
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+}
+
+.streak-guide {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  font-size: 0.68rem;
+  color: var(--muted);
+  flex-wrap: wrap;
+  padding: 2px 0 0;
+}
+
+.streak-multiplier {
+  font-size: clamp(1.05rem, 2.8vw, 1.4rem);
+  color: var(--accent);
+}
+
+.streak-multiplier.streak-x1-5 {
+  color: #ffe066;
+}
+
+.streak-multiplier.streak-x2 {
+  color: var(--accent-2);
+  text-shadow: 0 0 8px rgba(255, 176, 33, 0.5);
+}
+
+.streak-multiplier.streak-x3 {
+  color: #ff6b3b;
+  text-shadow: 0 0 12px rgba(255, 100, 30, 0.7);
+}
+
+@keyframes streakPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 120, 30, 0); }
+  50%       { box-shadow: 0 0 12px 3px rgba(255, 120, 30, 0.35); }
+}
+
 @media (max-width: 900px) {
   .play-area {
     grid-template-columns: 1fr;
