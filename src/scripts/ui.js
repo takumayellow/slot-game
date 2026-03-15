@@ -60,6 +60,21 @@ function updatePanel() {
   betEl.textContent = String(engine.bet);
   lastWinEl.textContent = String(engine.lastWin);
 
+  // Update win streak display
+  if (streakEl) streakEl.textContent = String(engine.winStreak);
+  if (streakMultiplierEl) {
+    const mult = engine.getStreakMultiplier();
+    streakMultiplierEl.textContent = mult > 1 ? `×${mult}` : "×1";
+    streakMultiplierEl.className =
+      "streak-multiplier" +
+      (mult >= 3 ? " streak-x3" : mult >= 2 ? " streak-x2" : mult >= 1.5 ? " streak-x1-5" : "");
+  }
+  const streakSection = document.getElementById("streakSection");
+  if (streakSection) {
+    streakSection.classList.toggle("streak-active", engine.winStreak >= 2);
+    streakSection.classList.toggle("streak-hot", engine.winStreak >= 5);
+  }
+
   const disabled = spinning || !engine.canSpin();
   spinBtn.disabled = disabled;
   betUpBtn.disabled = spinning || engine.bet >= RULES.maxBet;
@@ -155,6 +170,27 @@ function playJackpotSound() {
       osc.start(t);
       osc.stop(t + 0.16);
     });
+  } catch (_error) {
+    // ignore audio errors
+  }
+}
+
+// Lose sound: short descending sawtooth buzz
+function playLoseSound() {
+  try {
+    ensureAudioContext();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.18);
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.22);
   } catch (_error) {
     // ignore audio errors
   }
@@ -324,16 +360,21 @@ function triggerWinEffect(amount) {
 
 }
 
-function showResultPopup(isWin, amount = 0) {
+function showResultPopup(isWin, amount = 0, streak = 0, multiplier = 1) {
   jackpotBannerEl.classList.remove("show", "lose");
   void jackpotBannerEl.offsetWidth;
 
   if (isWin) {
-    jackpotBannerEl.textContent = amount >= 100 ? "超大当たり！" : "当たり！";
+    let text = amount >= 100 ? "超大当たり！" : "当たり！";
+    if (streak >= 5) text = `🔥 ${streak}連勝! ×${multiplier}`;
+    else if (streak >= 3) text = `${streak}連勝 ×${multiplier}`;
+    else if (multiplier > 1) text = `当たり！ ×${multiplier}`;
+    jackpotBannerEl.textContent = text;
     playJackpotSound();
   } else {
     jackpotBannerEl.textContent = "はずれ";
     jackpotBannerEl.classList.add("lose");
+    playLoseSound();
   }
 
   jackpotBannerEl.classList.add("show");
@@ -395,11 +436,19 @@ async function onSpin() {
   updatePanel();
 
   if (result.win > 0) {
-    setMessage(`${result.reason} +${result.win}枚`, true);
+    const streakLabel =
+      result.winStreak >= 2 ? ` [${result.winStreak}連勝 ×${result.multiplier}]` : "";
+    setMessage(`${result.reason} +${result.win}枚${streakLabel}`, true);
     triggerWinEffect(result.win);
-    showResultPopup(true, result.win);
+    showResultPopup(true, result.win, result.winStreak, result.multiplier);
     const cherryCount = result.reels.filter((symbol) => symbol.key === "CHERRY").length;
-    if (result.win >= 100) {
+    if (result.winStreak >= 5) {
+      setCharacterLine(`${result.winStreak}連勝！ ×${result.multiplier}倍が付いてるよ！`);
+      void speak(`${result.winStreak}連勝だよ．すごい！`);
+    } else if (result.winStreak >= 3) {
+      setCharacterLine(`${result.winStreak}連勝中！ ×${result.multiplier}倍ボーナス！`);
+      void speak(`${result.winStreak}連勝中．このまま続けよう．`);
+    } else if (result.win >= 100) {
       setCharacterLine("大当たり！ このまま連チャン狙おう．");
       void speak("大当たりだよ．このまま連チャン狙おう．");
     } else if (cherryCount >= 2) {
@@ -411,7 +460,7 @@ async function onSpin() {
     }
   } else {
     setMessage("はずれ... もう1回！", false);
-    showResultPopup(false);
+    showResultPopup(false, 0, 0, 1);
     if (engine.credit <= 10) {
       setCharacterLine("いったんベットを下げて立て直そう．");
       void speak("いったんベットを下げて立て直そう．");

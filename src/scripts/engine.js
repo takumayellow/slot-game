@@ -39,11 +39,22 @@ function evaluate(reels, bet) {
   };
 }
 
+// Win streak multipliers: streak count → payout multiplier
+// streak 2: ×1.5, streak 3: ×2, streak 5+: ×3
+function streakMultiplier(streak) {
+  if (streak >= 5) return 3.0;
+  if (streak >= 3) return 2.0;
+  if (streak >= 2) return 1.5;
+  return 1.0;
+}
+
 export class SlotEngine {
   constructor() {
     this.credit = RULES.startingCredit;
     this.bet = RULES.minBet;
     this.lastWin = 0;
+    this.winStreak = 0;      // consecutive winning spins
+    this.lastMultiplier = 1; // multiplier applied on the last spin
   }
 
   canSpin() {
@@ -64,6 +75,8 @@ export class SlotEngine {
     this.credit = RULES.startingCredit;
     this.bet = RULES.minBet;
     this.lastWin = 0;
+    this.winStreak = 0;
+    this.lastMultiplier = 1;
   }
 
   spin() {
@@ -77,20 +90,41 @@ export class SlotEngine {
     this.credit -= this.bet;
 
     const reels = [pickWeightedSymbol(), pickWeightedSymbol(), pickWeightedSymbol()];
-    const result = evaluate(reels, this.bet);
+    const baseResult = evaluate(reels, this.bet);
 
-    this.credit += result.win;
-    this.lastWin = result.win;
+    let finalWin = baseResult.win;
+    let multiplier = 1;
+
+    if (baseResult.win > 0) {
+      // Apply streak multiplier from current streak BEFORE incrementing
+      multiplier = streakMultiplier(this.winStreak);
+      finalWin = Math.round(baseResult.win * multiplier);
+      this.winStreak += 1;
+    } else {
+      this.winStreak = 0;
+    }
+
+    this.credit += finalWin;
+    this.lastWin = finalWin;
+    this.lastMultiplier = multiplier;
 
     return {
       success: true,
       reels,
-      win: result.win,
-      reason: result.reason,
+      win: finalWin,
+      baseWin: baseResult.win,
+      reason: baseResult.reason,
       credit: this.credit,
       bet: this.bet,
       lastWin: this.lastWin,
+      winStreak: this.winStreak,
+      multiplier,
     };
+  }
+
+  // Returns the multiplier that would apply on the NEXT win.
+  getStreakMultiplier() {
+    return streakMultiplier(this.winStreak);
   }
 }
 
