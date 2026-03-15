@@ -507,7 +507,10 @@ voiceSettingsBtn.addEventListener("click", () => {
   if (VOICEVOX_URL !== "/voicevox") {
     dialogCurrentUrl.textContent = `現在: ${VOICEVOX_URL}`;
   } else if (window.location.protocol === "https:") {
-    dialogCurrentUrl.textContent = "現在: 未設定（HTTPS 環境ではプロキシURLの入力が必要です）";
+dialogCurrentUrl.textContent = "現在: 未設定（HTTPS 環境ではプロキシ URL の入力が必要です）";
+  } else {
+    dialogCurrentUrl.textContent = "現在: ローカル（/voicevox）";
+dialogCurrentUrl.textContent = "現在: 未設定（HTTPS 環境ではプロキシURLの入力が必要です）";
   } else {
     dialogCurrentUrl.textContent = "現在: 同一オリジン（/voicevox）";
   }
