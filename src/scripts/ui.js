@@ -17,6 +17,8 @@ const charaLineEl = document.getElementById("charaLine");
 const winFxEl = document.getElementById("winFx");
 const jackpotBannerEl = document.getElementById("jackpotBanner");
 const voiceStateEl = document.getElementById("voiceState");
+const streakEl = document.getElementById("winStreak");
+const streakMultiplierEl = document.getElementById("streakMultiplier");
 
 const spinBtn = document.getElementById("spin");
 const betUpBtn = document.getElementById("betUp");
