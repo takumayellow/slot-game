@@ -192,7 +192,10 @@ async function initVoicevoxTsumugi() {
       }
       speakerId = null;
       const reason = error instanceof Error ? error.message : "unknown";
-      setVoiceState(`VOICEVOX未接続 (${VOICEVOX_URL}, ${reason})`);
+      const hint = window.location.protocol === "https:" && !explicitVoiceApi
+        ? " — ⚙ を押してプロキシURLを再確認してください"
+        : "";
+      setVoiceState(`VOICEVOX未接続 (${VOICEVOX_URL}, ${reason})${hint}`);
       return false;
     }
   }
@@ -450,9 +453,13 @@ voiceTestBtn.addEventListener("click", async () => {
 voiceSettingsBtn.addEventListener("click", () => {
   const saved = localStorage.getItem("voiceApi") || "";
   voiceApiInput.value = VOICEVOX_URL !== "/voicevox" ? VOICEVOX_URL : saved;
-  dialogCurrentUrl.textContent = VOICEVOX_URL !== "/voicevox"
-    ? `現在: ${VOICEVOX_URL}`
-    : "現在: ローカル（/voicevox）";
+  if (VOICEVOX_URL !== "/voicevox") {
+    dialogCurrentUrl.textContent = `現在: ${VOICEVOX_URL}`;
+  } else if (window.location.protocol === "https:") {
+    dialogCurrentUrl.textContent = "現在: 未設定（HTTPS 環境ではプロキシ URL の入力が必要です）";
+  } else {
+    dialogCurrentUrl.textContent = "現在: ローカル（/voicevox）";
+  }
   voiceSettingsDialog.showModal();
 });
 
