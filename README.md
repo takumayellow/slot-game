@@ -5,7 +5,7 @@
 
 ## 公開サイト
 
-https://takumayellow.github.io/slot-game/
+**[→ ゲームを遊ぶ](https://takumayellow.github.io/slot-game/)**
 
 ## フォルダ構成
 
@@ -79,4 +79,4 @@ https://takumayellow.github.io/slot-game/?voiceApi=https://<your-proxy-domain>/v
 - ボーナスゲーム
 - 効果音
 - セーブデータ（LocalStorage）
-- リールごとの停止演出
+- リールごとの停止演出
