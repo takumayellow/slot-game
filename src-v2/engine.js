@@ -55,23 +55,6 @@ const RULES = {
   ],
 };
 
-// Reel strips - each reel has a strip of symbol keys
-// Weighted by repeating symbols proportionally
-function buildReelStrip() {
-  const strip = [];
-  for (const sym of SYMBOLS) {
-    for (let i = 0; i < sym.weight; i++) {
-      strip.push(sym.key);
-    }
-  }
-  // Shuffle
-  for (let i = strip.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [strip[i], strip[j]] = [strip[j], strip[i]];
-  }
-  return strip;
-}
-
 // ============================================================
 // WEIGHTED RANDOM PICK
 // ============================================================
@@ -244,9 +227,9 @@ class SlotEngine {
     let finalWin = baseWin;
 
     if (baseWin > 0) {
+      this.winStreak++;
       multiplier = streakMultiplier(this.winStreak);
       finalWin = Math.round(baseWin * multiplier);
-      this.winStreak++;
     } else {
       this.winStreak = 0;
     }
@@ -274,11 +257,12 @@ class SlotEngine {
       }
     }
 
-    // Classify win level
+    // Classify win level (use actual line cost for threshold, not 0 during free spins)
+    const effectiveCost = Math.max(cost, activePaylines * betPerLine);
     let winLevel = 'none';
     if (isJackpot) winLevel = 'jackpot';
-    else if (finalWin >= cost * 20) winLevel = 'bigwin';
-    else if (finalWin >= cost * 5) winLevel = 'win';
+    else if (finalWin >= effectiveCost * 20) winLevel = 'bigwin';
+    else if (finalWin >= effectiveCost * 5) winLevel = 'win';
     else if (finalWin > 0) winLevel = 'small';
 
     return {
