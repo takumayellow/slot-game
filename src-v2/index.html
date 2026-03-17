@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>LUCKY 777 - Pachislot V2</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<!-- Spark overlay for win effects -->
+<div id="spark-container" class="spark-container" aria-hidden="true"></div>
+
+<!-- Win banner overlay -->
+<div id="win-banner" class="win-banner" aria-hidden="true" role="status">
+  <div id="win-banner-text" class="win-banner-text">WIN!</div>
+</div>
+
+<!-- Main cabinet wrapper -->
+<div class="cabinet-wrapper">
+  <div class="cabinet" role="main" aria-label="パチスロ LUCKY 777">
+
+    <!-- ========== MARQUEE ========== -->
+    <header class="cabinet-marquee">
+      <div class="marquee-title">LUCKY 777</div>
+      <div class="marquee-sub">PACHISLOT &bull; V2 &bull; SPECIAL EDITION</div>
+      <div class="marquee-lights" aria-hidden="true">
+        <span class="marquee-light"></span>
+        <span class="marquee-light"></span>
+        <span class="marquee-light"></span>
+        <span class="marquee-light"></span>
+        <span class="marquee-light"></span>
+        <span class="marquee-light"></span>
+        <span class="marquee-light"></span>
+        <span class="marquee-light"></span>
+      </div>
+    </header>
+
+    <!-- ========== LED STATUS DISPLAYS ========== -->
+    <section class="status-panel" aria-label="スコア表示">
+      <div class="led-group">
+        <span class="led-label">CREDIT</span>
+        <span id="credit-display" class="led-value" aria-label="クレジット">000100</span>
+      </div>
+      <div class="led-group">
+        <span class="led-label">WIN</span>
+        <span id="win-display" class="led-value" aria-label="獲得枚数">0000</span>
+      </div>
+      <div class="led-group">
+        <span class="led-label">STREAK×</span>
+        <span id="multiplier-display" class="led-value" aria-label="連勝倍率">×1.0</span>
+      </div>
+    </section>
+
+    <!-- Secondary status row -->
+    <section class="status-panel" style="grid-template-columns: repeat(2,1fr); padding-top: 4px; padding-bottom: 4px;" aria-label="詳細表示">
+      <div class="led-group">
+        <span class="led-label">BET</span>
+        <span id="bet-display" class="led-value" style="font-size:16px;" aria-label="ベット">1</span>
+      </div>
+      <div class="led-group">
+        <span class="led-label">STREAK</span>
+        <span id="streak-display" class="led-value" style="font-size:16px;" aria-label="連勝数">0</span>
+      </div>
+    </section>
+
+    <!-- ========== FREE SPIN PANEL ========== -->
+    <div id="freespins-panel" class="freespins-panel" role="status" aria-live="polite">
+      <span class="freespins-label">FREE SPIN</span>
+      <span id="freespins-display" class="freespins-count">0</span>
+      <span class="freespins-label">残り</span>
+    </div>
+
+    <!-- ========== PAYLINE INDICATOR ========== -->
+    <div class="payline-bar" aria-label="ペイライン" aria-hidden="true">
+      <div class="payline-indicator" title="センターライン"></div>
+      <div class="payline-indicator" title="トップライン"></div>
+      <div class="payline-indicator" title="ボトムライン"></div>
+      <div class="payline-indicator" title="対角1"></div>
+      <div class="payline-indicator" title="対角2"></div>
+      <span class="paylines-text" id="paylines-display">LINES: 1</span>
+    </div>
+
+    <!-- ========== REEL WINDOW ========== -->
+    <section class="reel-section" aria-label="リール">
+      <div class="reel-frame">
+        <div class="reels-row">
+
+          <!-- Reel 0 -->
+          <div id="reel-0" class="reel" aria-label="リール1">
+            <div class="reel-cell sym-cherry">🍒</div>
+            <div class="reel-cell sym-seven center-row center-row-marker">7</div>
+            <div class="reel-cell sym-bell">🔔</div>
+          </div>
+
+          <!-- Reel 1 -->
+          <div id="reel-1" class="reel" aria-label="リール2">
+            <div class="reel-cell sym-bell">🔔</div>
+            <div class="reel-cell sym-bar center-row center-row-marker">BAR</div>
+            <div class="reel-cell sym-lemon">🍋</div>
+          </div>
+
+          <!-- Reel 2 -->
+          <div id="reel-2" class="reel" aria-label="リール3">
+            <div class="reel-cell sym-lemon">🍋</div>
+            <div class="reel-cell sym-watermelon center-row center-row-marker">🍉</div>
+            <div class="reel-cell sym-grape">🍇</div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== CONTROLS ========== -->
+    <section class="controls-section" aria-label="操作パネル">
+
+      <!-- Bet buttons -->
+      <div class="bet-row">
+        <button id="btn-bet1" class="btn-bet" type="button" aria-label="1BET: 1ライン">
+          1 BET
+        </button>
+        <button id="btn-betmax" class="btn-bet" type="button" aria-label="MAX BET: 5ライン">
+          MAX BET
+        </button>
+      </div>
+
+      <!-- SPIN button -->
+      <div class="spin-row">
+        <button id="btn-spin" class="btn-spin" type="button" aria-label="スピン">
+          SPIN
+        </button>
+      </div>
+
+      <!-- Utility buttons -->
+      <div class="util-row">
+        <button id="btn-reset" class="btn-util" type="button" aria-label="リセット">
+          RESET
+        </button>
+        <button id="btn-mute" class="btn-util" type="button" aria-label="ミュート" title="ミュート">
+          🔊 SOUND
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ========== MESSAGE DISPLAY ========== -->
+    <div class="message-panel">
+      <div id="message-display" class="message-display" aria-live="polite" role="status">
+        SPIN を押してスタート！
+      </div>
+    </div>
+
+    <!-- ========== PAY TABLE ========== -->
+    <section class="paytable-panel" aria-label="ペイテーブル">
+      <div class="paytable-title">PAY TABLE (BET×)</div>
+      <div class="paytable-grid">
+        <div class="pay-row">
+          <span class="pay-symbol">7 7 7</span>
+          <span class="pay-amount">50+ JACKPOT</span>
+        </div>
+        <div class="pay-row">
+          <span class="pay-symbol">🍉🍉🍉</span>
+          <span class="pay-amount">×10</span>
+        </div>
+        <div class="pay-row">
+          <span class="pay-symbol">BAR×3</span>
+          <span class="pay-amount">×20</span>
+        </div>
+        <div class="pay-row">
+          <span class="pay-symbol">🔔🔔🔔</span>
+          <span class="pay-amount">×5</span>
+        </div>
+        <div class="pay-row">
+          <span class="pay-symbol">🍇🍇🍇</span>
+          <span class="pay-amount">×3</span>
+        </div>
+        <div class="pay-row">
+          <span class="pay-symbol">🍋🍋🍋</span>
+          <span class="pay-amount">×3</span>
+        </div>
+        <div class="pay-row">
+          <span class="pay-symbol">🍒🍒🍒</span>
+          <span class="pay-amount">×2</span>
+        </div>
+        <div class="pay-row">
+          <span class="pay-symbol">🍒 any</span>
+          <span class="pay-amount">×2</span>
+        </div>
+        <div class="pay-row" style="font-size:9px; color:#555; border:none; grid-column: span 1">
+          <span>777=FREE×15</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== BOTTOM DECORATION ========== -->
+    <div class="cabinet-bottom" aria-hidden="true">
+      <div class="bottom-lights">
+        <span class="bottom-light"></span>
+        <span class="bottom-light"></span>
+        <span class="bottom-light"></span>
+        <span class="bottom-light"></span>
+        <span class="bottom-light"></span>
+      </div>
+      <span class="version-text">V2.0.0 &copy; LUCKY 777</span>
+      <div class="bottom-lights">
+        <span class="bottom-light" style="animation-direction:reverse"></span>
+        <span class="bottom-light" style="animation-direction:reverse"></span>
+        <span class="bottom-light" style="animation-direction:reverse"></span>
+        <span class="bottom-light" style="animation-direction:reverse"></span>
+        <span class="bottom-light" style="animation-direction:reverse"></span>
+      </div>
+    </div>
+
+  </div><!-- /.cabinet -->
+</div><!-- /.cabinet-wrapper -->
+
+<!-- Scripts: engine first, then audio, then UI -->
+<script src="./engine.js"></script>
+<script src="./audio.js"></script>
+<script src="./ui.js"></script>
+
+</body>
+</html>
