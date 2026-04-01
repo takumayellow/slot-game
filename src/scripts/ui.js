@@ -32,10 +32,18 @@ let currentAudio = null;
 let isSpeaking = false;
 const query = new URLSearchParams(window.location.search);
 const explicitVoiceApi = query.get("voiceApi") || localStorage.getItem("voiceApi") || null;
+function isGitHubPages() {
+  return window.location.hostname === "takumayellow.github.io";
+}
+
 function getDefaultVoicevoxUrl() {
   const { protocol, hostname } = window.location;
   if (protocol === "http:" && (hostname === "localhost" || hostname === "127.0.0.1")) {
     return "http://localhost:10101"; // AivisSpeech default port
+  }
+  if (isGitHubPages()) {
+    const saved = localStorage.getItem("voiceApi");
+    return saved || null;
   }
   return "/voicevox";
 }
@@ -197,6 +205,12 @@ function playLoseSound() {
 }
 
 async function initVoicevoxTsumugi() {
+  if (VOICEVOX_URL === null) {
+    speakerId = null;
+    setVoiceState("音声はオフです（ローカルでVOICEVOXを起動すると音声付きで遊べます）");
+    return false;
+  }
+
   if (window.location.protocol === "https:" && VOICEVOX_URL === "/voicevox") {
     speakerId = null;
     setVoiceState("VOICEVOX未接続（⚙ を押してプロキシURLを設定）");
@@ -503,9 +517,11 @@ voiceTestBtn.addEventListener("click", async () => {
 
 voiceSettingsBtn.addEventListener("click", () => {
   const saved = localStorage.getItem("voiceApi") || "";
-  voiceApiInput.value = VOICEVOX_URL !== "/voicevox" ? VOICEVOX_URL : saved;
-  if (VOICEVOX_URL !== "/voicevox") {
+  voiceApiInput.value = VOICEVOX_URL && VOICEVOX_URL !== "/voicevox" ? VOICEVOX_URL : saved;
+  if (VOICEVOX_URL && VOICEVOX_URL !== "/voicevox") {
     dialogCurrentUrl.textContent = `現在: ${VOICEVOX_URL}`;
+  } else if (isGitHubPages()) {
+    dialogCurrentUrl.textContent = "このゲームはVOICEVOX音声に対応しています。ローカルでVOICEVOXを起動して、このURLを入力してください";
   } else if (window.location.protocol === "https:") {
     dialogCurrentUrl.textContent = "現在: 未設定（HTTPS 環境ではプロキシURLの入力が必要です）";
   } else {
@@ -531,7 +547,7 @@ voiceApiSave.addEventListener("click", async () => {
     VOICEVOX_URL = newUrl;
   } else {
     localStorage.removeItem("voiceApi");
-    VOICEVOX_URL = "/voicevox";
+    VOICEVOX_URL = getDefaultVoicevoxUrl();
   }
   speakerId = null;
   voiceSettingsDialog.close();
