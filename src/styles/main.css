@@ -636,6 +636,79 @@ body.win-mode .slot-app {
   }
 }
 
+/* ゲームオーバー演出 */
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: gameOverFadeIn 0.8s ease forwards;
+}
+
+.game-over-overlay.hidden {
+  display: none;
+}
+
+@keyframes gameOverFadeIn {
+  0% { background: rgba(0, 0, 0, 0); }
+  100% { background: rgba(0, 0, 0, 0.85); }
+}
+
+.game-over-content {
+  text-align: center;
+  animation: gameOverSlideIn 0.6s ease 0.3s both;
+}
+
+@keyframes gameOverSlideIn {
+  0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.game-over-title {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #ff2244;
+  text-shadow: 0 0 30px rgba(255, 34, 68, 0.6), 0 0 60px rgba(255, 34, 68, 0.3);
+  letter-spacing: 0.15em;
+  margin-bottom: 1.2rem;
+  font-family: "Kanit", "Segoe UI", sans-serif;
+}
+
+.game-over-line {
+  font-size: 1.1rem;
+  color: #ffaaaa;
+  margin-bottom: 2rem;
+  min-height: 1.5em;
+}
+
+.game-over-btn {
+  font-size: 1.3rem;
+  font-weight: 700;
+  padding: 14px 48px;
+  border: 2px solid #ff4466;
+  border-radius: 12px;
+  background: transparent;
+  color: #ff4466;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  animation: gameOverBtnPulse 1.5s ease-in-out infinite;
+  transition: background 0.2s, color 0.2s;
+}
+
+.game-over-btn:hover,
+.game-over-btn:active {
+  background: #ff4466;
+  color: #fff;
+}
+
+@keyframes gameOverBtnPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 68, 102, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(255, 68, 102, 0.6); }
+}
+
 @media (max-width: 560px) and (orientation: portrait) {
   body::before {
     background: url("../assets/tsumugi.png") no-repeat 8% -4%;
