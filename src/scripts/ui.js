@@ -43,7 +43,7 @@ function getDefaultVoicevoxUrl() {
   }
   if (isGitHubPages()) {
     const saved = localStorage.getItem("voiceApi");
-    return saved || null;
+    return saved || "https://voicevox-proxy-932581541278.asia-northeast1.run.app/voicevox";
   }
   return "/voicevox";
 }
