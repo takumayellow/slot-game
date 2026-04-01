@@ -94,6 +94,62 @@ function setMessage(text, isWin = false) {
   messageEl.classList.toggle("win", isWin);
 }
 
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+const LINES = {
+  spinStart: [
+    "さぁ回すよっ！",
+    "いっくよー！",
+    "今度こそ…！",
+    "ドキドキする…！",
+    "ここで引きたい…！",
+  ],
+  win: [
+    "やったー！当たりだよ！",
+    "きたきた！いい感じ！",
+    "おめでとう！ナイスだね！",
+    "すごいすごい！",
+    "ツイてるね！この調子！",
+  ],
+  bigWin: [
+    "大当たり！ このまま連チャン狙おう．",
+    "うわぁ！すごい当たり！",
+    "ジャックポット級だよ！",
+  ],
+  lose: [
+    "惜しい…！もう1回！",
+    "次で引こう．もう1回いこっ．",
+    "うーん…でもまだいける！",
+    "ドンマイドンマイ！",
+    "ここから巻き返すよ！",
+  ],
+  streak: [
+    "連勝すごい！絶好調だね！",
+    "止まらないね！このまま行こう！",
+    "連チャン継続！気持ちいいー！",
+  ],
+  lowCredit: [
+    "いったんベットを下げて立て直そう．",
+    "慎重にいこっか．",
+    "ここは我慢のとき…！",
+  ],
+  broke: [
+    "あぁ…全部なくなっちゃった…",
+    "ここまでか…リセットして再挑戦！",
+    "うぅ…でもまだ諦めないよ！",
+  ],
+  reset: [
+    "リセット完了．ここから逆転しよう．",
+    "新しく始めよう！今度こそ！",
+    "気持ち切り替えていこっ！",
+  ],
+  idle: [
+    "SPINボタン押してね！",
+    "どんどん回そう！",
+    "待ってるよ～",
+  ],
+};
+
 function setCharacterLine(text) {
   charaLineEl.textContent = `つむぎ「${text}」`;
 }
@@ -435,7 +491,11 @@ async function onSpin() {
   const result = engine.spin();
   if (!result.success) {
     setMessage(result.error, false);
-    setCharacterLine("ベットを下げるか，RESETで再開しよう．");
+    if (engine.credit <= 0) {
+      setCharacterLine(pick(LINES.broke));
+    } else {
+      setCharacterLine("ベットを下げるか，RESETで再開しよう．");
+    }
     updatePanel();
     return;
   }
@@ -443,6 +503,7 @@ async function onSpin() {
   spinning = true;
   updatePanel();
   setMessage("回転中...", false);
+  setCharacterLine(pick(LINES.spinStart));
 
   await animateAndSet(result.reels);
 
@@ -463,24 +524,24 @@ async function onSpin() {
       setCharacterLine(`${result.winStreak}連勝中！ ×${result.multiplier}倍ボーナス！`);
       void speak(`${result.winStreak}連勝中．このまま続けよう．`);
     } else if (result.win >= 100) {
-      setCharacterLine("大当たり！ このまま連チャン狙おう．");
-      void speak("大当たりだよ．このまま連チャン狙おう．");
-    } else if (cherryCount >= 2) {
-      setCharacterLine("小当たりだよ．次はもっと伸ばそう．");
-      void speak("小当たりだよ．次はもっと伸ばそう．");
+      setCharacterLine(pick(LINES.bigWin));
+      void speak(pick(LINES.bigWin));
     } else {
-      setCharacterLine("いい感じ！ まだまだいけるよ．");
-      void speak("いい感じ．まだまだいけるよ．");
+      setCharacterLine(pick(LINES.win));
+      void speak(pick(LINES.win));
     }
   } else {
     setMessage("はずれ... もう1回！", false);
     showResultPopup(false, 0, 0, 1);
-    if (engine.credit <= 10) {
-      setCharacterLine("いったんベットを下げて立て直そう．");
-      void speak("いったんベットを下げて立て直そう．");
+    if (engine.credit <= 0) {
+      setCharacterLine(pick(LINES.broke));
+      void speak(pick(LINES.broke));
+    } else if (engine.credit <= 10) {
+      setCharacterLine(pick(LINES.lowCredit));
+      void speak(pick(LINES.lowCredit));
     } else {
-      setCharacterLine("次で引こう．もう1回いこっ．");
-      void speak("次で引こう．もう一回いこっ．");
+      setCharacterLine(pick(LINES.lose));
+      void speak(pick(LINES.lose));
     }
   }
 }
@@ -504,14 +565,14 @@ resetBtn.addEventListener("click", async () => {
   reelEls[1].textContent = "🍋";
   reelEls[2].textContent = "🔔";
   setMessage("リセット完了．");
-  setCharacterLine("リセット完了．ここから逆転しよう．");
+  setCharacterLine(pick(LINES.reset));
   void speak("リセット完了．ここから逆転しよう．");
   updatePanel();
 });
 
 voiceTestBtn.addEventListener("click", async () => {
   await unlockAudioOnGesture();
-  setCharacterLine("音声テストするよ．");
+  setCharacterLine(pick(LINES.idle));
   await speak("音声テストです．春日部つむぎで読み上げています．");
 });
 
@@ -573,5 +634,5 @@ voiceSettingsDialog.addEventListener("click", (e) => {
 fillPayTable();
 updatePanel();
 setMessage("準備OK．SPINを押してスタート！");
-setCharacterLine("赤い台で勝負開始だよ．");
+setCharacterLine(pick(LINES.idle));
 void initVoicevoxTsumugi();
