@@ -24,7 +24,9 @@ const spinBtn = document.getElementById("spin");
 const betUpBtn = document.getElementById("betUp");
 const betDownBtn = document.getElementById("betDown");
 const resetBtn = document.getElementById("reset");
-const voiceTestBtn = document.getElementById("voiceTest");
+const gameOverOverlay = document.getElementById("gameOverOverlay");
+const gameOverLine = document.getElementById("gameOverLine");
+const gameOverResetBtn = document.getElementById("gameOverReset");
 
 let spinning = false;
 let speakerId = null;
@@ -152,6 +154,17 @@ const LINES = {
 
 function setCharacterLine(text) {
   charaLineEl.textContent = `つむぎ「${text}」`;
+}
+
+function showGameOver() {
+  const line = pick(LINES.broke);
+  gameOverLine.textContent = `つむぎ「${line}」`;
+  gameOverOverlay.classList.remove("hidden");
+  void speak(line);
+}
+
+function hideGameOver() {
+  gameOverOverlay.classList.add("hidden");
 }
 
 function setVoiceState(text) {
@@ -534,8 +547,7 @@ async function onSpin() {
     setMessage("はずれ... もう1回！", false);
     showResultPopup(false, 0, 0, 1);
     if (engine.credit <= 0) {
-      setCharacterLine(pick(LINES.broke));
-      void speak(pick(LINES.broke));
+      showGameOver();
     } else if (engine.credit <= 10) {
       setCharacterLine(pick(LINES.lowCredit));
       void speak(pick(LINES.lowCredit));
@@ -558,22 +570,26 @@ betDownBtn.addEventListener("click", () => {
   updatePanel();
 });
 
-resetBtn.addEventListener("click", async () => {
-  await unlockAudioOnGesture();
+function doReset() {
   engine.reset();
   reelEls[0].textContent = "🍒";
   reelEls[1].textContent = "🍋";
   reelEls[2].textContent = "🔔";
   setMessage("リセット完了．");
   setCharacterLine(pick(LINES.reset));
-  void speak("リセット完了．ここから逆転しよう．");
+  void speak(pick(LINES.reset));
+  hideGameOver();
   updatePanel();
+}
+
+resetBtn.addEventListener("click", async () => {
+  await unlockAudioOnGesture();
+  doReset();
 });
 
-voiceTestBtn.addEventListener("click", async () => {
+gameOverResetBtn.addEventListener("click", async () => {
   await unlockAudioOnGesture();
-  setCharacterLine(pick(LINES.idle));
-  await speak("音声テストです．春日部つむぎで読み上げています．");
+  doReset();
 });
 
 voiceSettingsBtn.addEventListener("click", () => {
