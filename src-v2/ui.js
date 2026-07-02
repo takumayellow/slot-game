@@ -14,9 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const SYMBOLS = window.SlotSymbolsV2;
   const RULES = window.SlotRulesV2;
 
-  // Symbol display map
+  // Symbol display map (key → emoji/label)
   const SYMBOL_DISPLAY = {};
-  SYMBOLS.forEach(s => { SYMBOL_DISPLAY[s.key] = s.label; });
+  // Symbol name map (key → Japanese name)
+  const SYMBOL_NAME = {};
+  SYMBOLS.forEach(s => {
+    SYMBOL_DISPLAY[s.key] = s.label;
+    SYMBOL_NAME[s.key] = s.name;
+  });
 
   // Symbol color class map
   const SYMBOL_COLOR = {
@@ -160,11 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const interval = setInterval(() => {
         elapsed += frameInterval;
         // Show random symbols while spinning
-        cells.forEach(cell => {
+        cells.forEach((cell, row) => {
           const sym = getRandomSymbol();
           cell.textContent = sym.label;
-          cell.className = 'reel-cell spinning-frame ' + (SYMBOL_COLOR[sym.key] || '');
-          if (cell.classList.contains('center-row-marker')) cell.classList.add('center-row');
+          const centerClass = row === 1 ? 'center-row center-row-marker' : '';
+          cell.className = ['reel-cell', 'spinning-frame', centerClass, SYMBOL_COLOR[sym.key]].filter(Boolean).join(' ');
         });
 
         if (elapsed >= totalDuration) {
@@ -250,8 +255,10 @@ document.addEventListener('DOMContentLoaded', () => {
     winBannerText.textContent = text;
     winBanner.className = 'win-banner';
     winBanner.classList.add('show', 'level-' + level);
+    winBanner.removeAttribute('aria-hidden');
     setTimeout(() => {
       winBanner.classList.remove('show', 'level-' + level);
+      winBanner.setAttribute('aria-hidden', 'true');
     }, level === 'jackpot' ? 3000 : 1800);
   }
 
@@ -327,14 +334,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Determine message and trigger effects
     if (result.win > 0) {
       const streakText = result.winStreak >= 2 ? ` [${result.winStreak}連勝 ×${result.multiplier.toFixed(1)}]` : '';
-      const winNames = result.wins.map(w => {
-        const sym = SYMBOLS.find(s => s.key === w.key);
-        return sym ? sym.name : w.key;
-      }).join(', ');
+      const winNames = result.wins.map(w => SYMBOL_NAME[w.key] || w.key).join(', ');
       setMessage(`${winNames} +${result.win}枚${streakText}`, 'win');
       triggerWinEffect(result);
 
-      if (result.winStreak >= 2 && result.winStreak % 1 === 0) {
+      // Play streak-up sound only when the multiplier actually increases (at threshold boundaries)
+      const thresholdStreaks = RULES.streakThresholds.map(t => t.min);
+      if (thresholdStreaks.includes(result.winStreak)) {
         audio.playStreakUp();
       }
     } else {
@@ -384,6 +390,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const nowEnabled = audio.toggleMute();
     muteBtn.textContent = nowEnabled ? '🔊' : '🔇';
     muteBtn.title = nowEnabled ? 'ミュート' : 'サウンドON';
+    muteBtn.setAttribute('aria-label', nowEnabled ? 'ミュート' : 'サウンドON');
+    muteBtn.setAttribute('aria-pressed', String(!nowEnabled));
   });
 
   resetBtn.addEventListener('click', () => {
