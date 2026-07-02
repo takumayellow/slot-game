@@ -5,15 +5,19 @@
 
 ## 公開サイト
 
-**[→ ゲームを遊ぶ](https://takumayellow.github.io/slot-game/)**
+**[→ ゲームを遊ぶ (V1)](https://takumayellow.github.io/slot-game/)**
+**[→ ゲームを遊ぶ (V2・本格パチスロUI刷新版)](https://takumayellow.github.io/slot-game/v2/)**
+
+V2 は 5 ペイライン・フリースピン・連勝倍率を備えた新エンジン/UIです．V1 の画面上部にあるリンクからも行き来できます．
 
 ## フォルダ構成
 
 - `docs/` 設計メモ
-- `src/` 実行ファイル
+- `src/` V1 実行ファイル
 - `src/scripts/` ゲームロジックと UI 制御
 - `src/styles/` スタイル
 - `src/assets/` 画像などの拡張用
+- `src-v2/` V2（本格パチスロUI刷新版）実行ファイル一式
 
 ## 起動方法
 

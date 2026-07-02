@@ -27,10 +27,17 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Assemble site (v1 at root, v2 under /v2)
+        run: |
+          mkdir -p _site
+          cp -r src/. _site/
+          mkdir -p _site/v2
+          cp -r src-v2/. _site/v2/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./src
+          path: ./_site
 
       - name: Deploy
         id: deployment
