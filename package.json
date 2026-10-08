@@ -1,0 +1,27 @@
+{
+  "name": "tsumugi-pachinko",
+  "private": true,
+  "version": "3.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "sim": "vite-node scripts/simulate.ts",
+    "play": "vite-node scripts/play.ts",
+    "font-chars": "vite-node scripts/font-chars.ts -- --write"
+  },
+  "dependencies": {
+    "@fontsource/dela-gothic-one": "^5.1.0",
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/three": "^0.169.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vite-node": "^2.1.4",
+    "vitest": "^2.1.4"
+  }
+}
