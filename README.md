@@ -1,86 +1,65 @@
-# Slot Game
+# つむぎパチンコ
 
-ブラウザで動く 3 リールスロットゲームです．  
-ネオン路地をテーマにした，招き猫ディーラー「ミケ」付きUIです．
+春日部つむぎの非公式ファンメイド・パチンコです．ブラウザで動きます．
 
-## 公開サイト
+**[→ 遊ぶ](https://takumayellow.github.io/slot-game/)**
 
-**[→ ゲームを遊ぶ (V1)](https://takumayellow.github.io/slot-game/)**
-**[→ ゲームを遊ぶ (V2・本格パチスロUI刷新版)](https://takumayellow.github.io/slot-game/v2/)**
+- 玉は 2D 物理で釘に当たりながら落ち，ヘソ・電チュー・アタッカー・普図ゲートに入ったときだけ抽選や賞球が起きる
+- 盤面と台の外装は Three.js の 3D（真鍮の釘，パール塗装の枠，LED，ガラス，光彩）
+- 液晶では図柄の変動・リーチ・カットイン・PUSH・SP リーチ・大当たりラウンドを演出し，盤面の可動役物が熱い場面で落ちてくる
+- 実機と同じ流れ: 特図1/特図2 の保留（最大 4 個・色で先読み），右打ち，電サポ，ST の RUSH，時短，昇格
+- 演出の台詞は VOICEVOX（春日部つむぎ）で書き出した音声を同梱し，効果音と BGM は Web Audio で合成する
+- 持ち玉・投資・大当たり履歴・スランプグラフはその端末のブラウザに保存する
 
-V2 は 5 ペイライン・フリースピン・連勝倍率を備えた新エンジン/UIです．V1 の画面上部にあるリンクからも行き来できます．
+## スペック
 
-## フォルダ構成
+| 項目 | 値 |
+|------|----|
+| 大当たり確率 | 通常 1/99.9 ／ ST 中 1/39.9 |
+| ST | 40 回（継続率 約 64%） |
+| ヘソ当たり | 3R．50% で RUSH，残りは時短 30 回 |
+| 電チュー当たり | 10R が 30%，5R が 70%．RUSH 中は 2% で極・RUSH（LT） |
+| 1 ラウンド | アタッカー 10 カウント（1 個 10 玉） |
+| 玉貸 | 500 円で 125 玉（4 円パチンコ相当．お金は賭けられない） |
 
-- `docs/` 設計メモ
-- `src/` V1 実行ファイル
-- `src/scripts/` ゲームロジックと UI 制御
-- `src/styles/` スタイル
-- `src/assets/` 画像などの拡張用
-- `src-v2/` V2（本格パチスロUI刷新版）実行ファイル一式
+数値は `src/game/spec.ts` に集めてある．
 
-## 起動方法
+## 操作
 
-1. `src/index.html` をブラウザで開く
-2. またはローカルサーバーを使う場合
+| 操作 | キー |
+|------|------|
+| 発射 / 停止 | Enter |
+| 打ち出しの強さ | ← → またはスライダー（左打ちは 55 前後，右打ちは自動） |
+| PUSH | Space |
+| 玉貸 | B |
+| 視点の切り替え | Z |
+| 音のオン / オフ | M |
+| 遊び方 | H |
 
-```powershell
-cd src
-python -m http.server 8080
+## 開発
+
+```bash
+npm ci
+npm run dev      # 開発サーバー
+npm test         # ロジック・物理・液晶リール・フォント字形のテスト
+npm run build    # 型検査 + dist/ へビルド
+npm run sim      # 打ち出し強さごとの入賞率（盤面の調整用）
 ```
 
-`http://localhost:8080` にアクセスします．
+`main` に push すると GitHub Actions がテストとビルドをして GitHub Pages に公開する．
 
-## VOICEVOX連携
+液晶や看板に新しい文字を足したら `npm run font-chars` で `src/fontChars.ts` を更新する（キャンバスに描く前にその字形を読み込むため）．
 
-- 春日部つむぎ音声は VOICEVOX API で再生します．
-- 既定の接続先は `/voicevox` です（同一オリジンのプロキシ想定）．
-- ローカル開発では Vite などで `/voicevox -> http://127.0.0.1:50021` をプロキシしてください．
-- GitHub Pages で使う場合は，`voiceApi` で HTTPS の中継APIを指定してください．
-- GitHub Pages 単体では，ブラウザから `localhost:50021` へ直接接続できないため，中継なし運用はできません．
+## 構成
 
-例:
+| ディレクトリ | 役割 |
+|------|------|
+| `src/game/` | スペック・抽選・保留・状態遷移（描画に依存しない） |
+| `src/sim/` | 盤面の配置と玉の物理 |
+| `src/lcd/` | 液晶の 2D 演出 |
+| `src/render/` | Three.js の盤面・外装・役物・ポストエフェクト |
+| `src/audio/` | 効果音・BGM・ボイス |
+| `src/ui/` | 操作部・データカウンタ・保存 |
+| `scripts/` | シミュレーション，ボイス書き出し，フォント字形の収集 |
 
-```text
-https://<user>.github.io/slot-game/?voiceApi=https://<your-voicevox-proxy>
-```
-
-- 正しい春日部つむぎ音声を優先するため，ブラウザ音声フォールバックは使いません．
-
-## 付属プロキシサーバー
-
-`proxy/` に VOICEVOX 中継サーバー（Node.js + Express）を同梱しています．
-
-起動:
-
-```powershell
-cd proxy
-npm install
-$env:VOICEVOX_ENGINE_URL="http://127.0.0.1:50021"
-$env:CORS_ALLOW_ORIGINS="https://takumayellow.github.io"
-npm start
-```
-
-利用URL例:
-
-```text
-https://takumayellow.github.io/slot-game/?voiceApi=https://<your-proxy-domain>/voicevox
-```
-
-## 推奨画面
-
-- スマホ横向き（ランドスケープ）で，スロット本体を大きく表示
-- Pay情報はミニ表示で，ゲーム画面を主役に配置
-
-## 実装方針
-
-- ロジックを `SlotEngine` クラスに分離
-- シンボル設定と配当設定を `config.js` へ分離
-- UI からはロジックの公開 API のみを呼ぶ
-
-## 今後の拡張候補
-
-- ボーナスゲーム
-- 効果音
-- セーブデータ（LocalStorage）
-- リールごとの停止演出
+設計の考え方は [docs/concept.md](docs/concept.md)，素材の出典は [docs/asset-credits.md](docs/asset-credits.md)．
